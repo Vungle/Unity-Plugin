@@ -34,7 +34,7 @@ C.  “*Vungle SDK*” means the software development kit and any other
 
 <!-- -->
 
-### 2.  Vungle SDK License 
+### 2.  Vungle SDK License
 During the term of this Agreement, Vungle
     hereby grants Developer a worldwide, non-transferable (except for a
     permitted assignment of this Agreement), non-exclusive license to
@@ -53,7 +53,7 @@ During the term of this Agreement, Vungle
     by Vungle; and (d) to internally use any provided documentation for
     the sole purpose of exercising the foregoing licenses.
 
-### 3.  License Restrictions. 
+### 3.  License Restrictions.
 Developer has no rights or licenses with
     respect to the Vungle SDK or any documentation (collectively, the
     “*Vungle Materials*”) except as expressly provided in this
@@ -68,7 +68,7 @@ Developer has no rights or licenses with
     that appear on the Vungle Materials or during the use and operation
     thereof.
 
-### 4.  Insertion of Advertising. 
+### 4.  Insertion of Advertising.
 Vungle and Developer agree that any
     insertion order agreed to by the parties for the serving and
     insertion of advertisements from the Vungle Platform to or through
@@ -112,7 +112,7 @@ B.  *Developer Rights*. Subject to Section 5.1, as between Developer and
     <http://www.vungle.com/privacy.html> (as updated from time to time)
     and incorporated by reference into this Agreement.
 
-### 7.  Compliance with Laws. 
+### 7.  Compliance with Laws.
 Developer acknowledges and agrees that
     Vungle may collect non-personally identifiable unique identifiers
     and other information from end users and end users’ devices via the
@@ -151,7 +151,7 @@ Developer acknowledges and agrees that
     any claims of COPPA violations or other violations of laws relating
     to Developers Apps.
 
-### 8. Support. 
+### 8. Support.
 Vungle shall have no obligation under this Agreement to
     provide any upgrades, patches, enhancements, fixes or any other
     support for the Vungle Platform or Vungle Materials. Vungle may make
@@ -220,7 +220,7 @@ B.  *Use and Disclosure Restrictions*. Developer shall not use the
 
 <!-- -->
 
-### 11. Warranty Disclaimer. 
+### 11. Warranty Disclaimer.
 EXCEPT AS EXPRESSLY SET FORTH IN THIS
     AGREEMENT, VUNGLE DOES NOT MAKE ANY WARRANTIES, EXPRESS, IMPLIED,
     STATUTORY OR OTHERWISE, WITH RESPECT TO THE SUBJECT MATTER OF THIS
@@ -236,7 +236,7 @@ EXCEPT AS EXPRESSLY SET FORTH IN THIS
     VUNGLE MAY MODIFY OR SUSPEND THE VUNGLE PLATFORM AT ANY TIME IN ITS
     SOLE DISCRETION AND WITHOUT NOTICE.
 
-### 12. Indemnification. 
+### 12. Indemnification.
 Developer agrees to indemnify, defend, and hold
     harmless Vungle and its directors, officers, and employees from and
     against any liabilities, damages, costs and expenses (including
@@ -256,7 +256,7 @@ Developer agrees to indemnify, defend, and hold
     obligations and preservation of attorney/client, work product, and
     other privileges.
 
-### 13. Limitation of Liability. 
+### 13. Limitation of Liability.
 VUNGLE SHALL NOT BE LIABLE TO DEVELOPER
     FOR ANY PUNITIVE, INCIDENTAL, INDIRECT, SPECIAL, RELIANCE OR
     CONSEQUENTIAL DAMAGES, INCLUDING LOST BUSINESS, REVENUE, OR
@@ -548,5 +548,3 @@ E.  “*Vungle Advertisements*” means video advertisements, sourced by or
         which Vungle is required by law to deduct. Developer is
         responsible for paying any other taxes, duties, or fees for
         which Developer is legally responsible.
-
-
