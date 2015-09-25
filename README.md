@@ -14,4 +14,4 @@ Once you've created an account you can follow our [Getting Started for Unity Gui
 * Integrated Android Publisher SDK v3.3.2
 
 ## License
-The Vungle iOS-SDK is available under a commercial license. See the LICENSE file for more info.
+The Vungle Unity-Plugin is available under a commercial license. See the LICENSE file for more info.
