@@ -1,5 +1,14 @@
 ## Changelog
 
+## VERSION 2.2.4
+* Integrated Android Publisher SDK v3.3.3
+* Resolved potential package conflict related to MiniJSON libary
+* Implemented OnAdPlayableEvent to sync up with platform SDK
+* Implemented OnAdFinishedEvent that replaces deprecated onAdEndedEvent and
+onAdViewedEvent. New event provide single source of information for ad completion.
+* Added VersionInfo property to query plug-in and SDK version for diagnostic purposes
+* Fixed several minor bugs
+
 ## VERSION 2.2.3
 * Integrated iOS Publisher SDK v3.2.0
 * Integrated Android Publisher SDK v3.3.2
