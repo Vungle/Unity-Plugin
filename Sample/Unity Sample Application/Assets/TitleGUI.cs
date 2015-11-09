@@ -156,7 +156,7 @@ public class TitleGUI : MonoBehaviour {
 		//Fired log event from sdk
 		Vungle.onLogEvent += (log) => {
 			DebugLog ("Log: " + log);
-		}
+		};
 
 	}
 
