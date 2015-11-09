@@ -139,22 +139,24 @@ public class TitleGUI : MonoBehaviour {
 			DebugLog ("Ad event is starting!  Pause your game  animation or sound here.");
 		};
 
-		//Event is triggered when an ad play has ended
-		Vungle.onAdEndedEvent += () => {
-			DebugLog ("Ad has ended");
-		};
-
-		//Event is triggered after video completion, passes in timeWatched and totalDuration parameters
+		//Event is triggered when a Vungle ad finished and provides the entire information about this event
 		//These can be used to determine how much of the video the user viewed, if they skipped the ad early, etc.
-		Vungle.onAdViewedEvent += (timeWatched, totalDuration) => {
-			DebugLog ("Ad viewed - Total Watched Time:" + timeWatched + "/" + totalDuration);
+		Vungle.onAdFinishedEvent += (args) => {
+			DebugLog ("Ad finished - watched time:" + args.TimeWatched + ", total duration:" + args.TotalDuration 
+			          + ", was call to action clicked:" + args.WasCallToActionClicked +  ", is completed view:" 
+			          + args.IsCompletedView);
 		};
 
-		//Event is triggered when an ad has been locally cached and is ready for viewing
+		//Event is triggered when the ad's playable state has been changed
 		//It can be used to enable certain functionality only accessible when ad plays are available
-		Vungle.onCachedAdAvailableEvent += () => {
-			DebugLog ("An ad has been cached for viewing!");
+		Vungle.adPlayableEvent += (adPlayable) => {
+			DebugLog ("Ad's playable state has been changed! Now: " + adPlayable);
 		};
+
+		//Fired log event from sdk
+		Vungle.onLogEvent += (log) => {
+			DebugLog ("Log: " + log);
+		}
 
 	}
 
