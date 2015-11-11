@@ -40,6 +40,14 @@ public class TitleGUI : MonoBehaviour {
 	void Update () {
 		
 	}
+
+	// Called when the player pauses
+	void OnApplicationPause(bool pauseStatus) {
+		if (pauseStatus)
+			Vungle.onPause();
+		else
+			Vungle.onResume();
+	}
 	
 	void OnGUI () {
 
