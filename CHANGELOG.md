@@ -1,5 +1,9 @@
 ## Changelog
 
+## VERSION 3.0.0
+* Integrated Vungle Windows 10 SDK
+* Several minor fixes
+
 ## VERSION 2.2.4
 * Integrated Android Publisher SDK v3.3.3
 * Resolved potential package conflict related to MiniJSON libary
