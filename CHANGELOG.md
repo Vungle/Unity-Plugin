@@ -1,6 +1,6 @@
 ## Changelog
 
-## VERSION 3.0.0
+## VERSION 3.0.6
 * Integrated Windows 10 SDK v1.0.17
 * Fixed problem with loading iOS PNG resources
 * Removed unnecessary permission from AndroidManifest.xml file
