@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+#if UNITY_IPHONE || UNITY_ANDROID || UNITY_WSA_10_0
 public class TitleGUI : MonoBehaviour {
 
 	//UI Sizing 
@@ -26,7 +27,7 @@ public class TitleGUI : MonoBehaviour {
 	void Start () {
 
 		DebugLog("Initializing the Vungle SDK");
-		Vungle.init ("Test_Android", "Test_iOS");
+		Vungle.init ("Test_Android", "Test_iOS", "vungleTest");
 
 		//Initialize Everything
 		initializeTextures ();
@@ -187,3 +188,4 @@ public class TitleGUI : MonoBehaviour {
 		Debug.Log(logTag + System.DateTime.Today +": " + message);
 	}
 }
+#endif
