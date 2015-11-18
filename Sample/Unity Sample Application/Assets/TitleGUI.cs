@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
-//v3.0.0
+
+#if UNITY_IPHONE || UNITY_ANDROID || UNITY_WSA_10_0
 public class TitleGUI : MonoBehaviour {
 
 	//UI Sizing 
@@ -187,3 +188,4 @@ public class TitleGUI : MonoBehaviour {
 		Debug.Log(logTag + System.DateTime.Today +": " + message);
 	}
 }
+#endif
