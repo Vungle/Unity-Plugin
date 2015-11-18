@@ -9,14 +9,9 @@ Once you've created an account you can follow our [Getting Started for Unity Gui
 * The Vungle Unity Plugin supports both Unity 5 and Unity 4.
 
 ## Release Notes
-## VERSION 2.2.4
-* Integrated Android Publisher SDK v3.3.3
-* Resolved potential package conflict related to MiniJSON libary
-* Implemented OnAdPlayableEvent to sync up with platform SDK
-* Implemented OnAdFinishedEvent that replaces deprecated onAdEndedEvent and
-onAdViewedEvent. New event provide single source of information for ad completion.
-* Added VersionInfo property to query plug-in and SDK version for diagnostic purposes
-* Fixed several minor bugs
+## VERSION 3.0.0
+* Integrated Vungle Windows 10 SDK
+* Several minor fixes
 
 ## License
 The Vungle Unity-Plugin is available under a commercial license. See the LICENSE file for more info.
