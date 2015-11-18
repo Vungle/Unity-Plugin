@@ -27,7 +27,7 @@ public class TitleGUI : MonoBehaviour {
 	void Start () {
 
 		DebugLog("Initializing the Vungle SDK");
-		Vungle.init ("Test_Android", "Test_iOS");
+		Vungle.init ("Test_Android", "Test_iOS", "vungleTest");
 
 		//Initialize Everything
 		initializeTextures ();
