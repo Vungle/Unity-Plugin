@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
-
+//v3.0.0
 public class TitleGUI : MonoBehaviour {
 
 	//UI Sizing 
