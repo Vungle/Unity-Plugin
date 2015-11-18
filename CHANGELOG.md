@@ -1,8 +1,9 @@
 ## Changelog
 
 ## VERSION 3.0.0
-* Integrated Vungle Windows 10 SDK
-* Several minor fixes
+* Integrated Windows 10 SDK v1.0.17
+* Fixed problem with loading iOS PNG resources
+* Removed unnecessary permission from AndroidManifest.xml file
 
 ## VERSION 2.2.4
 * Integrated Android Publisher SDK v3.3.3
