@@ -1,5 +1,8 @@
 ## Changelog
 
+## VERSION 3.0.7
+* Integrated Windows 10 SDK v1.0.18
+
 ## VERSION 3.0.6
 * Integrated Windows 10 SDK v1.0.17
 * Fixed problem with loading iOS PNG resources
