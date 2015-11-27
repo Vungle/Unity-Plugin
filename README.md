@@ -9,10 +9,8 @@ Once you've created an account you can follow our [Getting Started for Unity Gui
 * The Vungle Unity Plugin supports both Unity 5 and Unity 4.
 
 ## Release Notes
-## VERSION 3.0.6
-* Integrated Windows 10 SDK v1.0.17
-* Fixed problem with loading iOS PNG resources
-* Removed unnecessary permission from AndroidManifest.xml file
+## VERSION 3.0.7
+* Integrated Windows 10 SDK v1.0.18
 
 ## License
 The Vungle Unity-Plugin is available under a commercial license. See the LICENSE file for more info.
