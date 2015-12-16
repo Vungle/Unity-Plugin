@@ -7,10 +7,13 @@ Once you've created an account you can follow our [Getting Started for Unity Gui
 
 ### Requirements
 * The Vungle Unity Plugin supports both Unity 5 and Unity 4.
+* Windows support is currently available only for Unity 5.2.x
 
 ## Release Notes
-## VERSION 3.0.7
-* Integrated Windows 10 SDK v1.0.18
+
+#### VERSION 3.1.3
+* Integrated Windows SDK v1.1.6
+* Added support for Windows 8.1 and Windows Phone 8.1
 
 ## License
 The Vungle Unity-Plugin is available under a commercial license. See the LICENSE file for more info.
