@@ -1,7 +1,7 @@
 ## Changelog
 
 #### VERSION 3.1.5
-* Integrated Android Publisher SDK v3.3.3
+* Integrated Android Publisher SDK v3.3.4
 * Added support for Windows 8.1 and Windows Phone 8.1 for Unity 4
 
 #### VERSION 3.1.3
