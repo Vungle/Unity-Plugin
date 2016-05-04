@@ -11,9 +11,8 @@ Once you've created an account you can follow our [Getting Started for Unity Gui
 
 ## Release Notes
 
-#### VERSION 3.1.5
-* Integrated Android Publisher SDK v3.3.4
-* Added support for Windows 8.1 and Windows Phone 8.1 for Unity 4
+#### VERSION 3.1.9
+* Integrated Android Publisher SDK v3.3.5
 
 ## License
 The Vungle Unity-Plugin is available under a commercial license. See the LICENSE file for more info.
