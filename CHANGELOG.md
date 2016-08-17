@@ -2,9 +2,9 @@
 
 #### VERSION 3.1.13
 * Integrated Android Publisher SDK v4.0.2
+* Integrated iOS Publisher SDK v3.2.2
 
 #### VERSION 3.1.10
-* Integrated iOS Publisher SDK v3.2.1
 
 #### VERSION 3.1.9
 * Integrated Android Publisher SDK v3.3.5
