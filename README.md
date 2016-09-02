@@ -11,9 +11,8 @@ Once you've created an account you can follow our [Getting Started for Unity Gui
 
 ## Release Notes
 
-#### VERSION 3.1.13
-* Integrated Android Publisher SDK v4.0.2
-* Integrated iOS Publisher SDK v3.2.2
+#### VERSION 3.1.15
+* Integrated Windows Publisher SDK v1.3.15
 
 ## License
 The Vungle Unity-Plugin is available under a commercial license. See the LICENSE file for more info.
