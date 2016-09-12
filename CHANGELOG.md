@@ -1,5 +1,8 @@
 ## Changelog
 
+#### VERSION 3.1.17
+* Integrated iOS Publisher SDK v4.0.4
+
 #### VERSION 3.1.15
 * Integrated Windows Publisher SDK v1.3.15
 
