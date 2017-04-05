@@ -11,8 +11,8 @@ Once you've created an account you can follow our [Getting Started for Unity Gui
 
 ## Release Notes
 
-#### VERSION 3.1.29
-* Fix Android onAdFinishedEvent bug
+#### VERSION 3.1.30
+* Integrated Windows Publisher SDK v1.3.16
 
 ## License
 The Vungle Unity-Plugin is available under a commercial license. See the LICENSE file for more info.

@@ -1,5 +1,8 @@
 ## Changelog
 
+#### VERSION 3.1.30
+* Integrated Windows Publisher SDK v1.3.16
+
 #### VERSION 3.1.29
 * Fix Android onAdFinishedEvent bug
 
