@@ -22,35 +22,12 @@ public class TitleGUI : MonoBehaviour {
 	string appID = "591236625b2480ac40000028";
 #endif
 
-
-	//UI Sizing 
-	int buttonCount = 3;
-	int buttonHeight;
-	int headerHeight;
-	int spacerHeight = 5;
-
-	//Textures
-	Texture2D vungleLogo;
-	Texture2D playDefaultAdTexture;
-	Texture2D playIncentivizedAdTexture;
-	Texture2D playCustomAdTexture;
-	Texture2D whiteBackgroundTexture;
-
-	//GUI Styles
-	GUIStyle imageButtonStyle;
 	GUIStyle titleLabelStyle;
-	GUIStyle uiStyle;
-
-	string logTag = "VungleSample-UNITY-";
-	// Use this for initialization
+	bool adInited = false;
 	void Start () {
-
 		DebugLog("Initializing the Vungle SDK");
-
 		//Initialize Everything
-		initializeTextures ();
 		initializeGUIStyles ();
-		initializeUISizes ();
 	}
 	
 	// Update is called once per frame
@@ -67,8 +44,7 @@ public class TitleGUI : MonoBehaviour {
 	}
 	
 	void OnGUI () {
-//		uiStyle.normal.background = whiteBackgroundTexture;
-		GUILayout.BeginArea (new Rect (0, 0, Screen.width, Screen.height), uiStyle);
+		GUILayout.BeginArea (new Rect (0, 0, Screen.width, Screen.height));
 		List<string> list = new List<string>(placements.Keys);
 
 		GUI.enabled = true;
@@ -81,13 +57,14 @@ public class TitleGUI : MonoBehaviour {
 			initializeEventHandlers ();
 		}
 
+		GUI.enabled = adInited;
 		GUILayout.Label ("Placement 1");
 		GUILayout.Label ("PlacementID " + list[0]);
 		GUI.enabled = placements[list[0]];
 		if (GUILayout.Button ("play")) {
 			Vungle.playAd(list[0]);
 		}
-		GUI.enabled = true;
+		GUI.enabled = adInited;
 
 		GUILayout.Label ("Placement 2");
 		GUILayout.Label ("PlacementID " + list[1]);
@@ -101,7 +78,7 @@ public class TitleGUI : MonoBehaviour {
 			Vungle.loadAd(list[1]);
 		}
 		GUILayout.EndHorizontal();
-		GUI.enabled = true;
+		GUI.enabled = adInited;
 
 		GUILayout.Label ("Placement 3");
 		GUILayout.Label ("PlacementID " + list[2]);
@@ -116,91 +93,18 @@ public class TitleGUI : MonoBehaviour {
 		}
 		GUILayout.EndHorizontal();
 
-		/*
-		//Begin overall view layout
-
-		GUILayout.FlexibleSpace ();
-
-		//Vungle Header
-		GUILayout.BeginHorizontal ();
-		GUILayout.FlexibleSpace ();
-		GUILayout.Label (vungleLogo, titleLabelStyle, GUILayout.Height ((int)(headerHeight * .67)));
-		GUILayout.FlexibleSpace ();
-		GUILayout.EndHorizontal ();
-
-		GUILayout.FlexibleSpace ();
-
-		//Only enable the buttons if we've got a cached ad ready to play
-		GUI.enabled = Vungle.isAdvertAvailable();
-		//Default PlayAd Button + onClick Handler
-		if (GUILayout.Button (playDefaultAdTexture, imageButtonStyle, GUILayout.Height (buttonHeight))) {
-			//Play default ad on click
-			Vungle.playAd ();
-		}
-
-		//Incentivized Ad Button + onClick Handler
-		if (GUILayout.Button (playIncentivizedAdTexture, imageButtonStyle, GUILayout.Height (buttonHeight))) {
-			//Play Incentivized Ad on click
-			Vungle.playAd(true, "example user name");
-		}
-
-		//Play Ad with All Options Button + onClick handler
-		if (GUILayout.Button (playCustomAdTexture, imageButtonStyle, GUILayout.Height (buttonHeight))) {
-			//Start the ad muted, unincentivized, and with a user info string
-			Vungle.setSoundEnabled(false);
-			Vungle.playAd(false, "a different user name");
-		}
-		GUI.enabled = true;
-		*/
-		
 		GUILayout.EndArea ();
 	}
 
-	void initializeTextures() {
-
-		whiteBackgroundTexture = singleColorTex (Screen.width, Screen.height, Color.white);
-
-		vungleLogo = (Texture2D)Resources.Load ("VungleLogo");
-		if (vungleLogo == null) {
-			DebugLog("vungleLogo texture didn't load!");
-		}
-		playDefaultAdTexture = (Texture2D)Resources.Load ("PlayDefaultAdButton");
-		if (playDefaultAdTexture == null) {
-			DebugLog("defaultAdButton texture didn't load!");
-		}
-		playIncentivizedAdTexture = (Texture2D)Resources.Load ("PlayIncentivizedAdButton");
-		if (playIncentivizedAdTexture == null) {
-			DebugLog("playIncentivizedAdTexture texture didn't load!");
-		}
-		playCustomAdTexture = (Texture2D)Resources.Load ("PlayCustomAdButton");
-		if (playCustomAdTexture == null) {
-			DebugLog("playCustomAdTexture texture didn't load!");
-		}
-	}
-
 	void initializeGUIStyles() {
-		imageButtonStyle = new GUIStyle ();
-		imageButtonStyle.stretchHeight = true;
-		imageButtonStyle.stretchWidth = true;
-		imageButtonStyle.fixedWidth = Screen.width;
-		imageButtonStyle.fixedHeight = buttonHeight;
-		
-		uiStyle = new GUIStyle ();
-
 		titleLabelStyle = new GUIStyle ();
 		titleLabelStyle.stretchWidth = true;
-		titleLabelStyle.stretchHeight = true;
+//		titleLabelStyle.stretchHeight = true;
 		titleLabelStyle.fixedWidth = Screen.width;
 //		titleLabelStyle.fixedHeight = headerHeight;
 		titleLabelStyle.alignment = TextAnchor.MiddleCenter;
 	}
 		
-	void initializeUISizes () {
-		headerHeight = (int)(Screen.height * 0.1);
-		int adjustedScreenHeight = Screen.height - headerHeight - (2 * spacerHeight);
-		buttonHeight = adjustedScreenHeight / buttonCount;
-	}
-
 	/* Setup EventHandlers for all available Vungle events */
 	void initializeEventHandlers() {
 
@@ -219,6 +123,7 @@ public class TitleGUI : MonoBehaviour {
 		//Event is triggered when the ad's playable state has been changed
 		//It can be used to enable certain functionality only accessible when ad plays are available
 		Vungle.adPlayableEvent += (placementID, adPlayable) => {
+			adInited = true;
 			DebugLog ("Ad's playable state has been changed! placementID " + placementID + ". Now: " + adPlayable);
 			placements[placementID] = adPlayable;
 		};
@@ -230,23 +135,9 @@ public class TitleGUI : MonoBehaviour {
 
 	}
 
-	/* Basic method used for building out the background texture for the main interface */
-	Texture2D singleColorTex(int width, int height, Color col) {
-		Color[] pix = new Color[width * height];
-		for (int i=0; i<pix.Length; i++) {
-			pix[i] = col;
-		}
-
-		Texture2D tex = new Texture2D (width, height);
-		tex.SetPixels (pix);
-		tex.Apply ();
-
-		return tex;
-	}
-
 	/* Common method for ensuring logging messages have the same format */
 	void DebugLog(string message) {
-		Debug.Log(logTag + System.DateTime.Today +": " + message);
+		Debug.Log("VungleUnitySample " + System.DateTime.Today +": " + message);
 	}
 }
 #endif
