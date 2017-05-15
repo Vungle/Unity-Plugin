@@ -55,6 +55,7 @@ public class TitleGUI : MonoBehaviour {
 			placements.Keys.CopyTo(array, 0);
 			Vungle.init (appID, appID, appID, array);
 			initializeEventHandlers ();
+			adInited = true;
 		}
 
 		GUI.enabled = adInited;
@@ -123,7 +124,6 @@ public class TitleGUI : MonoBehaviour {
 		//Event is triggered when the ad's playable state has been changed
 		//It can be used to enable certain functionality only accessible when ad plays are available
 		Vungle.adPlayableEvent += (placementID, adPlayable) => {
-			adInited = true;
 			DebugLog ("Ad's playable state has been changed! placementID " + placementID + ". Now: " + adPlayable);
 			placements[placementID] = adPlayable;
 		};
