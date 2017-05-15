@@ -1,8 +1,27 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
-#if UNITY_IPHONE || UNITY_ANDROID || UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
+#if UNITY_IPHONE || UNITY_ANDROID
 public class TitleGUI : MonoBehaviour {
+#if UNITY_IPHONE
+	Dictionary<string, bool> placements = new Dictionary<string, bool>
+	{
+		{ "DEFAULT63997", false },
+		{ "PLMT02I58266", false },
+		{ "PLMT03R65406", false }
+	};
+	string appID = "5912326f0e96c1a540000014";
+#else
+	Dictionary<string, bool> placements = new Dictionary<string, bool>
+	{
+		{ "DEFAULT18080", false },
+		{ "PLMT02I58745", false },
+		{ "PLMT03R02739", false }
+	};
+	string appID = "591236625b2480ac40000028";
+#endif
+
 
 	//UI Sizing 
 	int buttonCount = 3;
@@ -27,14 +46,11 @@ public class TitleGUI : MonoBehaviour {
 	void Start () {
 
 		DebugLog("Initializing the Vungle SDK");
-		Vungle.init ("Test_Android", "Test_iOS", "vungleTest");
 
 		//Initialize Everything
 		initializeTextures ();
 		initializeGUIStyles ();
 		initializeUISizes ();
-		initializeEventHandlers ();
-
 	}
 	
 	// Update is called once per frame
@@ -51,10 +67,57 @@ public class TitleGUI : MonoBehaviour {
 	}
 	
 	void OnGUI () {
-
-		//Begin overall view layout
-		uiStyle.normal.background = whiteBackgroundTexture;
+//		uiStyle.normal.background = whiteBackgroundTexture;
 		GUILayout.BeginArea (new Rect (0, 0, Screen.width, Screen.height), uiStyle);
+		List<string> list = new List<string>(placements.Keys);
+
+		GUI.enabled = true;
+
+		GUILayout.Label ("AppID " + appID, titleLabelStyle);
+		if (GUILayout.Button ("Init SDK")) {
+			string[] array = new string[placements.Keys.Count];
+			placements.Keys.CopyTo(array, 0);
+			Vungle.init (appID, appID, appID, array);
+			initializeEventHandlers ();
+		}
+
+		GUILayout.Label ("Placement 1");
+		GUILayout.Label ("PlacementID " + list[0]);
+		GUI.enabled = placements[list[0]];
+		if (GUILayout.Button ("play")) {
+			Vungle.playAd(list[0]);
+		}
+		GUI.enabled = true;
+
+		GUILayout.Label ("Placement 2");
+		GUILayout.Label ("PlacementID " + list[1]);
+		GUI.enabled = placements[list[1]];
+		GUILayout.BeginHorizontal ();
+		if (GUILayout.Button ("play")) {
+			Vungle.playAd(list[1]);
+		}
+		GUI.enabled = !placements[list[1]];
+		if (GUILayout.Button ("load")) {
+			Vungle.loadAd(list[1]);
+		}
+		GUILayout.EndHorizontal();
+		GUI.enabled = true;
+
+		GUILayout.Label ("Placement 3");
+		GUILayout.Label ("PlacementID " + list[2]);
+		GUI.enabled = placements[list[2]];
+		GUILayout.BeginHorizontal ();
+		if (GUILayout.Button ("play")) {
+			Vungle.playAd(list[2]);
+		}
+		GUI.enabled = !placements[list[2]];
+		if (GUILayout.Button ("load")) {
+			Vungle.loadAd(list[2]);
+		}
+		GUILayout.EndHorizontal();
+
+		/*
+		//Begin overall view layout
 
 		GUILayout.FlexibleSpace ();
 
@@ -88,11 +151,11 @@ public class TitleGUI : MonoBehaviour {
 			Vungle.playAd(false, "a different user name");
 		}
 		GUI.enabled = true;
+		*/
 		
 		GUILayout.EndArea ();
 	}
 
-	/* Setup default textures (from static PNG images) to be used on the interface buttons */
 	void initializeTextures() {
 
 		whiteBackgroundTexture = singleColorTex (Screen.width, Screen.height, Color.white);
@@ -115,7 +178,6 @@ public class TitleGUI : MonoBehaviour {
 		}
 	}
 
-	/* Setup the default GUIStyles used in the main interface */
 	void initializeGUIStyles() {
 		imageButtonStyle = new GUIStyle ();
 		imageButtonStyle.stretchHeight = true;
@@ -129,11 +191,10 @@ public class TitleGUI : MonoBehaviour {
 		titleLabelStyle.stretchWidth = true;
 		titleLabelStyle.stretchHeight = true;
 		titleLabelStyle.fixedWidth = Screen.width;
-		titleLabelStyle.fixedHeight = headerHeight;
+//		titleLabelStyle.fixedHeight = headerHeight;
 		titleLabelStyle.alignment = TextAnchor.MiddleCenter;
 	}
 		
-	/* Setup size constants used to organize and align main interface */
 	void initializeUISizes () {
 		headerHeight = (int)(Screen.height * 0.1);
 		int adjustedScreenHeight = Screen.height - headerHeight - (2 * spacerHeight);
@@ -144,22 +205,22 @@ public class TitleGUI : MonoBehaviour {
 	void initializeEventHandlers() {
 
 		//Event triggered during when an ad is about to be played
-		Vungle.onAdStartedEvent += () => {
-			DebugLog ("Ad event is starting!  Pause your game  animation or sound here.");
+		Vungle.onAdStartedEvent += (placementID) => {
+			DebugLog ("Ad " + placementID + " is starting!  Pause your game  animation or sound here.");
 		};
 
 		//Event is triggered when a Vungle ad finished and provides the entire information about this event
 		//These can be used to determine how much of the video the user viewed, if they skipped the ad early, etc.
-		Vungle.onAdFinishedEvent += (args) => {
-			DebugLog ("Ad finished - watched time:" + args.TimeWatched + ", total duration:" + args.TotalDuration 
-			          + ", was call to action clicked:" + args.WasCallToActionClicked +  ", is completed view:" 
+		Vungle.onAdFinishedEvent += (placementID, args) => {
+			DebugLog ("Ad finished - placementID " + placementID + " watched time:" + args.TimeWatched + ", was call to action clicked:" + args.WasCallToActionClicked +  ", is completed view:" 
 			          + args.IsCompletedView);
 		};
 
 		//Event is triggered when the ad's playable state has been changed
 		//It can be used to enable certain functionality only accessible when ad plays are available
-		Vungle.adPlayableEvent += (adPlayable) => {
-			DebugLog ("Ad's playable state has been changed! Now: " + adPlayable);
+		Vungle.adPlayableEvent += (placementID, adPlayable) => {
+			DebugLog ("Ad's playable state has been changed! placementID " + placementID + ". Now: " + adPlayable);
+			placements[placementID] = adPlayable;
 		};
 
 		//Fired log event from sdk
