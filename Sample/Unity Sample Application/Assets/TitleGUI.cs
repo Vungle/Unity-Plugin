@@ -25,17 +25,17 @@ public class TitleGUI : MonoBehaviour {
 
 	List<string> placementIdList;
 	
-	Button initButton;
-	Button playPlacement1Button;
-	Button loadPlacement2Button;
-	Button playPlacement2Button;
-	Button loadPlacement3Button;
-	Button playPlacement3Button;
+	public Button initButton;
+	public Button playPlacement1Button;
+	public Button loadPlacement2Button;
+	public Button playPlacement2Button;
+	public Button loadPlacement3Button;
+	public Button playPlacement3Button;
 	
-	Text appIDText;
-	Text placementID1Text;
-	Text placementID2Text;
-	Text placementID3Text;
+	public Text appIDText;
+	public Text placementID1Text;
+	public Text placementID2Text;
+	public Text placementID3Text;
 	
 	bool adInited = false;
 
@@ -51,10 +51,11 @@ public class TitleGUI : MonoBehaviour {
 
 	// Called when the player pauses
 	void OnApplicationPause(bool pauseStatus) {
-		if (pauseStatus)
-			Vungle.onPause();
-		else
-			Vungle.onResume();
+		if (pauseStatus) {
+			Vungle.onPause ();
+		} else {
+			Vungle.onResume ();
+		}
 	}
 
 	void SetupButtonsAndText () {
@@ -64,19 +65,7 @@ public class TitleGUI : MonoBehaviour {
 		placementID1Text.text = "Placement ID: " + placementIdList [0]; 
 		placementID2Text.text = "Placement ID: " + placementIdList [1]; 
 		placementID3Text.text = "Placement ID: " + placementIdList [2]; 
-		
-		initButton = GameObject.Find ("InitButton").GetComponent;
-		playPlacement1Button = GameObject.Find ("PlayButtonPlacement1");
-		loadPlacement2Button = GameObject.Find ("LoadButtonPlacement2");
-		playPlacement2Button = GameObject.Find ("PlayButtonPlacement2");
-		loadPlacement3Button = GameObject.Find ("LoadButtonPlacement3");
-		playPlacement3Button = GameObject.Find ("PlayButtonPlacement3");
-		
-		appIDText = GameObject.Find ("AppIDText");
-		placementID1Text = GameObject.Find ("PlacementID1Text");
-		placementID2Text = GameObject.Find ("PlacementID2Text");
-		placementID3Text = GameObject.Find ("PlacementID3Text");
-		
+
 		initButton.onClick.AddListener (onInitButton);
 		initButton.enabled = true;
 		playPlacement1Button.onClick.AddListener (onPlayPlacement1);
