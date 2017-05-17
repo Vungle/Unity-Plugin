@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 #if UNITY_IPHONE || UNITY_ANDROID
 public class TitleGUI : MonoBehaviour {
@@ -22,17 +23,30 @@ public class TitleGUI : MonoBehaviour {
 	string appID = "591236625b2480ac40000028";
 #endif
 
-	GUIStyle titleLabelStyle;
+	List<string> placementIdList;
+	
+	Button initButton;
+	Button playPlacement1Button;
+	Button loadPlacement2Button;
+	Button playPlacement2Button;
+	Button loadPlacement3Button;
+	Button playPlacement3Button;
+	
+	Text appIDText;
+	Text placementID1Text;
+	Text placementID2Text;
+	Text placementID3Text;
+	
 	bool adInited = false;
+
+
 	void Start () {
-		DebugLog("Initializing the Vungle SDK");
-		//Initialize Everything
-		initializeGUIStyles ();
+		SetupButtonsAndText();
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		
+		updateButtonState ();
 	}
 
 	// Called when the player pauses
@@ -42,69 +56,75 @@ public class TitleGUI : MonoBehaviour {
 		else
 			Vungle.onResume();
 	}
-	
-	void OnGUI () {
-		GUILayout.BeginArea (new Rect (0, 0, Screen.width, Screen.height));
-		List<string> list = new List<string>(placements.Keys);
 
-		GUI.enabled = true;
-
-		GUILayout.Label ("AppID " + appID, titleLabelStyle);
-		if (GUILayout.Button ("Init SDK")) {
-			string[] array = new string[placements.Keys.Count];
-			placements.Keys.CopyTo(array, 0);
-			Vungle.init (appID, appID, appID, array);
-			initializeEventHandlers ();
-		}
-
-		GUI.enabled = adInited;
-		GUILayout.Label ("Placement 1");
-		GUILayout.Label ("PlacementID " + list[0]);
-		GUI.enabled = placements[list[0]];
-		if (GUILayout.Button ("play")) {
-			Vungle.playAd(list[0]);
-		}
-		GUI.enabled = adInited;
-
-		GUILayout.Label ("Placement 2");
-		GUILayout.Label ("PlacementID " + list[1]);
-		GUI.enabled = adInited & placements[list[1]];
-		GUILayout.BeginHorizontal ();
-		if (GUILayout.Button ("play")) {
-			Vungle.playAd(list[1]);
-		}
-		GUI.enabled = adInited & !placements[list[1]];
-		if (GUILayout.Button ("load")) {
-			Vungle.loadAd(list[1]);
-		}
-		GUILayout.EndHorizontal();
-		GUI.enabled = adInited;
-
-		GUILayout.Label ("Placement 3");
-		GUILayout.Label ("PlacementID " + list[2]);
-		GUI.enabled = adInited & placements[list[2]];
-		GUILayout.BeginHorizontal ();
-		if (GUILayout.Button ("play")) {
-			Vungle.playAd(list[2]);
-		}
-		GUI.enabled = adInited & !placements[list[2]];
-		if (GUILayout.Button ("load")) {
-			Vungle.loadAd(list[2]);
-		}
-		GUILayout.EndHorizontal();
-
-		GUILayout.EndArea ();
-	}
-
-	void initializeGUIStyles() {
-		titleLabelStyle = new GUIStyle ();
-		titleLabelStyle.stretchWidth = true;
-//		titleLabelStyle.stretchHeight = true;
-		titleLabelStyle.fixedWidth = Screen.width;
-//		titleLabelStyle.fixedHeight = headerHeight;
-		titleLabelStyle.alignment = TextAnchor.MiddleCenter;
-	}
+	void SetupButtonsAndText () {
+		placementIdList = new List<string>(placements.Keys);
 		
+		appIDText.text = "App ID: " + appID;
+		placementID1Text.text = "Placement ID: " + placementIdList [0]; 
+		placementID2Text.text = "Placement ID: " + placementIdList [1]; 
+		placementID3Text.text = "Placement ID: " + placementIdList [2]; 
+		
+		initButton = GameObject.Find ("InitButton").GetComponent;
+		playPlacement1Button = GameObject.Find ("PlayButtonPlacement1");
+		loadPlacement2Button = GameObject.Find ("LoadButtonPlacement2");
+		playPlacement2Button = GameObject.Find ("PlayButtonPlacement2");
+		loadPlacement3Button = GameObject.Find ("LoadButtonPlacement3");
+		playPlacement3Button = GameObject.Find ("PlayButtonPlacement3");
+		
+		appIDText = GameObject.Find ("AppIDText");
+		placementID1Text = GameObject.Find ("PlacementID1Text");
+		placementID2Text = GameObject.Find ("PlacementID2Text");
+		placementID3Text = GameObject.Find ("PlacementID3Text");
+		
+		initButton.onClick.AddListener (onInitButton);
+		initButton.enabled = true;
+		playPlacement1Button.onClick.AddListener (onPlayPlacement1);
+		loadPlacement2Button.onClick.AddListener (onLoadPlacement2);
+		playPlacement2Button.onClick.AddListener (onPlayPlacement2);
+		loadPlacement3Button.onClick.AddListener (onLoadPlacement3);
+		playPlacement3Button.onClick.AddListener (onPlayPlacement3);
+	}
+	
+	void onInitButton() {
+		DebugLog("Initializing the Vungle SDK");
+
+		initButton.enabled = false;
+
+		string[] array = new string[placements.Keys.Count];
+		placements.Keys.CopyTo(array, 0);
+		Vungle.init (appID, appID, appID, array);
+		initializeEventHandlers ();
+	}
+	
+	void onPlayPlacement1 () {
+		Vungle.playAd(placementIdList[0]);
+	}
+	
+	void onLoadPlacement2 () {
+		Vungle.loadAd(placementIdList[1]);
+	}
+	
+	void onPlayPlacement2 () {
+		Vungle.playAd(placementIdList[1]);
+	}
+	
+	void onLoadPlacement3 () {
+		Vungle.loadAd(placementIdList[2]);
+	}
+	
+	void onPlayPlacement3 () {
+		Vungle.playAd(placementIdList[2]);
+	}
+	
+	void updateButtonState() {
+		playPlacement1Button.enabled = placements[placementIdList[0]];
+		loadPlacement2Button.enabled = adInited & !placements[placementIdList[1]];
+		playPlacement2Button.enabled = placements[placementIdList[1]];
+		loadPlacement3Button.enabled = adInited & !placements[placementIdList[2]];
+		playPlacement3Button.enabled = placements[placementIdList[2]];
+	}
+
 	/* Setup EventHandlers for all available Vungle events */
 	void initializeEventHandlers() {
 
