@@ -55,7 +55,6 @@ public class TitleGUI : MonoBehaviour {
 			placements.Keys.CopyTo(array, 0);
 			Vungle.init (appID, appID, appID, array);
 			initializeEventHandlers ();
-			adInited = true;
 		}
 
 		GUI.enabled = adInited;
@@ -69,12 +68,12 @@ public class TitleGUI : MonoBehaviour {
 
 		GUILayout.Label ("Placement 2");
 		GUILayout.Label ("PlacementID " + list[1]);
-		GUI.enabled = placements[list[1]];
+		GUI.enabled = adInited & placements[list[1]];
 		GUILayout.BeginHorizontal ();
 		if (GUILayout.Button ("play")) {
 			Vungle.playAd(list[1]);
 		}
-		GUI.enabled = !placements[list[1]];
+		GUI.enabled = adInited & !placements[list[1]];
 		if (GUILayout.Button ("load")) {
 			Vungle.loadAd(list[1]);
 		}
@@ -83,12 +82,12 @@ public class TitleGUI : MonoBehaviour {
 
 		GUILayout.Label ("Placement 3");
 		GUILayout.Label ("PlacementID " + list[2]);
-		GUI.enabled = placements[list[2]];
+		GUI.enabled = adInited & placements[list[2]];
 		GUILayout.BeginHorizontal ();
 		if (GUILayout.Button ("play")) {
 			Vungle.playAd(list[2]);
 		}
-		GUI.enabled = !placements[list[2]];
+		GUI.enabled = adInited & !placements[list[2]];
 		if (GUILayout.Button ("load")) {
 			Vungle.loadAd(list[2]);
 		}
@@ -133,6 +132,12 @@ public class TitleGUI : MonoBehaviour {
 			DebugLog ("Log: " + log);
 		};
 
+		//Fired initialize event from sdk
+		Vungle.onInitializeEvent += () => {
+			adInited = true;
+			DebugLog ("SDK initialized");
+		};
+		
 	}
 
 	/* Common method for ensuring logging messages have the same format */
