@@ -25,7 +25,7 @@ public class TitleGUI : MonoBehaviour {
 
 	List<string> placementIdList;
 	
-	public Button initButton;
+	public Button initSDKButton;
 	public Button playPlacement1Button;
 	public Button loadPlacement2Button;
 	public Button playPlacement2Button;
@@ -66,8 +66,8 @@ public class TitleGUI : MonoBehaviour {
 		placementID2Text.text = "Placement ID: " + placementIdList [1]; 
 		placementID3Text.text = "Placement ID: " + placementIdList [2]; 
 
-		initButton.onClick.AddListener (onInitButton);
-		initButton.enabled = true;
+		initSDKButton.onClick.AddListener (onInitButton);
+		initSDKButton.interactable = true;
 		playPlacement1Button.onClick.AddListener (onPlayPlacement1);
 		loadPlacement2Button.onClick.AddListener (onLoadPlacement2);
 		playPlacement2Button.onClick.AddListener (onPlayPlacement2);
@@ -78,7 +78,7 @@ public class TitleGUI : MonoBehaviour {
 	void onInitButton() {
 		DebugLog("Initializing the Vungle SDK");
 
-		initButton.enabled = false;
+		initSDKButton.interactable = false;
 
 		string[] array = new string[placements.Keys.Count];
 		placements.Keys.CopyTo(array, 0);
@@ -107,11 +107,11 @@ public class TitleGUI : MonoBehaviour {
 	}
 	
 	void updateButtonState() {
-		playPlacement1Button.enabled = placements[placementIdList[0]];
-		loadPlacement2Button.enabled = adInited & !placements[placementIdList[1]];
-		playPlacement2Button.enabled = placements[placementIdList[1]];
-		loadPlacement3Button.enabled = adInited & !placements[placementIdList[2]];
-		playPlacement3Button.enabled = placements[placementIdList[2]];
+		playPlacement1Button.interactable = placements[placementIdList[0]];
+		loadPlacement2Button.interactable = adInited & !placements[placementIdList[1]];
+		playPlacement2Button.interactable = placements[placementIdList[1]];
+		loadPlacement3Button.interactable = adInited & !placements[placementIdList[2]];
+		playPlacement3Button.interactable = placements[placementIdList[2]];
 	}
 
 	/* Setup EventHandlers for all available Vungle events */
