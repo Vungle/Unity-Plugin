@@ -5,6 +5,11 @@ using UnityEngine.UI;
 
 #if UNITY_IPHONE || UNITY_ANDROID
 public class TitleGUI : MonoBehaviour {
+	
+	string iOSAppID = "5912326f0e96c1a540000014";
+	string androidAppID = "591236625b2480ac40000028";
+	string windowsAppID = "";
+
 #if UNITY_IPHONE
 	Dictionary<string, bool> placements = new Dictionary<string, bool>
 	{
@@ -12,7 +17,6 @@ public class TitleGUI : MonoBehaviour {
 		{ "PLMT02I58266", false },
 		{ "PLMT03R65406", false }
 	};
-	string appID = "5912326f0e96c1a540000014";
 #else
 	Dictionary<string, bool> placements = new Dictionary<string, bool>
 	{
@@ -20,7 +24,6 @@ public class TitleGUI : MonoBehaviour {
 		{ "PLMT02I58745", false },
 		{ "PLMT03R02739", false }
 	};
-	string appID = "591236625b2480ac40000028";
 #endif
 
 	List<string> placementIdList;
@@ -60,7 +63,14 @@ public class TitleGUI : MonoBehaviour {
 
 	void SetupButtonsAndText () {
 		placementIdList = new List<string>(placements.Keys);
-		
+
+		string appID;
+#if UNITY_IPHONE
+		appID = iOSAppID;
+#else
+		appID = androidAppID;
+#endif
+
 		appIDText.text = "App ID: " + appID;
 		placementID1Text.text = "Placement ID: " + placementIdList [0]; 
 		placementID2Text.text = "Placement ID: " + placementIdList [1]; 
@@ -82,7 +92,7 @@ public class TitleGUI : MonoBehaviour {
 
 		string[] array = new string[placements.Keys.Count];
 		placements.Keys.CopyTo(array, 0);
-		Vungle.init (appID, appID, appID, array);
+		Vungle.init (androidAppID, iOSAppID, windowsAppID, array);
 		initializeEventHandlers ();
 	}
 	
