@@ -1,5 +1,9 @@
 ## Changelog
 
+#### VERSION 4.1.1
+* Integrated iOS Publisher SDK v5.1.0
+* Integrated Android Publisher SDK v5.1.0
+
 #### VERSION 4.0.2
 * Placements feature implemented.
 
