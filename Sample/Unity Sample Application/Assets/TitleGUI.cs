@@ -5,10 +5,9 @@ using UnityEngine.UI;
 
 #if UNITY_IPHONE || UNITY_ANDROID
 public class TitleGUI : MonoBehaviour {
-	
+
 	string iOSAppID = "5912326f0e96c1a540000014";
 	string androidAppID = "591236625b2480ac40000028";
-	string windowsAppID = "";
 
 #if UNITY_IPHONE
 	Dictionary<string, bool> placements = new Dictionary<string, bool>
@@ -27,26 +26,26 @@ public class TitleGUI : MonoBehaviour {
 #endif
 
 	List<string> placementIdList;
-	
+
 	public Button initSDKButton;
 	public Button playPlacement1Button;
 	public Button loadPlacement2Button;
 	public Button playPlacement2Button;
 	public Button loadPlacement3Button;
 	public Button playPlacement3Button;
-	
+
 	public Text appIDText;
 	public Text placementID1Text;
 	public Text placementID2Text;
 	public Text placementID3Text;
-	
+
 	bool adInited = false;
 
 
 	void Start () {
 		SetupButtonsAndText();
 	}
-	
+
 	// Update is called once per frame
 	void Update () {
 		updateButtonState ();
@@ -66,7 +65,7 @@ public class TitleGUI : MonoBehaviour {
 
 		string appID;
 #if UNITY_IPHONE
-		appID = iOSAppID;
+appID = iOSAppID;
 #else
 		appID = androidAppID;
 #endif
@@ -84,7 +83,7 @@ public class TitleGUI : MonoBehaviour {
 		loadPlacement3Button.onClick.AddListener (onLoadPlacement3);
 		playPlacement3Button.onClick.AddListener (onPlayPlacement3);
 	}
-	
+
 	void onInitButton() {
 		DebugLog("Initializing the Vungle SDK");
 
@@ -92,34 +91,40 @@ public class TitleGUI : MonoBehaviour {
 
 		string[] array = new string[placements.Keys.Count];
 		placements.Keys.CopyTo(array, 0);
-		Vungle.init (androidAppID, iOSAppID, windowsAppID, array);
+		string appID;
+#if UNITY_IPHONE
+appID = iOSAppID;
+#else
+		appID = androidAppID;
+#endif
+		Vungle.init(appID,array);
 		initializeEventHandlers ();
 	}
-	
+
 	void onPlayPlacement1 () {
 		Vungle.playAd(placementIdList[0]);
 	}
-	
+
 	void onLoadPlacement2 () {
 		Vungle.loadAd(placementIdList[1]);
 	}
-	
+
 	void onPlayPlacement2 () {
 		// option to change orientation
 		Dictionary<string, object> options = new Dictionary<string, object> ();
 #if UNITY_IPHONE
-		options ["orientation"] = 5;
+options ["orientation"] = 5;
 #else
 		options ["orientation"] = true;
 #endif
 
 		Vungle.playAd(options, placementIdList[1]);
 	}
-	
+
 	void onLoadPlacement3 () {
 		Vungle.loadAd(placementIdList[2]);
 	}
-	
+
 	void onPlayPlacement3 () {
 		// option to customize alert window and send user_id
 		Dictionary<string, object> options = new Dictionary<string, object> ();
@@ -131,7 +136,7 @@ public class TitleGUI : MonoBehaviour {
 
 		Vungle.playAd(options, placementIdList[2]);
 	}
-	
+
 	void updateButtonState() {
 		playPlacement1Button.interactable = placements[placementIdList[0]];
 		loadPlacement2Button.interactable = adInited & !placements[placementIdList[1]];
@@ -151,8 +156,8 @@ public class TitleGUI : MonoBehaviour {
 		//Event is triggered when a Vungle ad finished and provides the entire information about this event
 		//These can be used to determine how much of the video the user viewed, if they skipped the ad early, etc.
 		Vungle.onAdFinishedEvent += (placementID, args) => {
-			DebugLog ("Ad finished - placementID " + placementID + " watched time:" + args.TimeWatched + ", was call to action clicked:" + args.WasCallToActionClicked +  ", is completed view:" 
-			          + args.IsCompletedView);
+			DebugLog ("Ad finished - placementID " + placementID + ", was call to action clicked:" + args.WasCallToActionClicked +  ", is completed view:" 
+				+ args.IsCompletedView);
 		};
 
 		//Event is triggered when the ad's playable state has been changed
@@ -172,7 +177,7 @@ public class TitleGUI : MonoBehaviour {
 			adInited = true;
 			DebugLog ("SDK initialized");
 		};
-		
+
 	}
 
 	/* Common method for ensuring logging messages have the same format */
