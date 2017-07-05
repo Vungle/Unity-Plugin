@@ -15,11 +15,9 @@ Once you've created an account you can follow our [Getting Started for Unity Gui
 
 ## Release Notes
 
-#### VERSION 4.0.2
-* Placements feature implemented.
-
-#### VERSION 3.1.34
-* Integrated iOS Publisher SDK v4.1.0
+#### VERSION 4.1.1
+* Integrated iOS Publisher SDK v5.1.0
+* Integrated Android Publisher SDK v5.1.0
 
 ## License
 The Vungle Unity-Plugin is available under a commercial license. See the LICENSE file for more info.
