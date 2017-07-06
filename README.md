@@ -10,8 +10,19 @@ Once you've created an account you can follow our [Getting Started for Unity Gui
 * Windows 10 support is currently available only for Unity 5.2.x
 
 ### Running the Vungle sample app
-* When you open this project, add "TitleGUI.cs" script file to "GameObject" in "MainTitleScene".
-* If you see compile error in xCode project, check if "Target iOS Version" is set to "7.0" and above.
+To run our sample app, download our Unity Sample app.  Create a new project in Unity.  With Unity open and your project presented, double-click the downloaded VunglePlugin.unitypackage file to add the Vungle Unity Plugin to your application.
+
+Click All to select everything before importing.
+
+In Project window, navigate to the Assets Folder, check to see if this folder has all the files in your downloaded project Assets folder.  If all these files are not in your Unity Assets folder then move them manually by right clicking on Assets folder in Unity and choose "open in finder", in the opened finder window copy and paste everything from the downloaded Sample app assets folder to your Unity project's Asset folder and replace the files if necessary.
+
+In Unity, project navigator->Assets doubleclick on MainTitleScreen.
+
+Click on GameObject, choose TitleGUI inside Inspector->Title GUI (Script).
+
+Press Command + Shift + B to open up Build Settings.  Click on iOS or Android then hit Switch Platform.
+
+In the Build Settings window click on Player Settings.  In Inspector, make sure Company Name, Product Name, Package Name are your own and correct values.
 
 ## Release Notes
 
