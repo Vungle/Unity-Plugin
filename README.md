@@ -7,7 +7,7 @@ Once you've created an account you can follow our [Getting Started for Unity Gui
 
 ### Requirements
 * The Vungle Unity Plugin supports both Unity 5 and Unity 4.
-* Windows 10 support is currently available only for Unity 5.2.x
+* Windows 10 supports for Unity 5.2 and higher.
 
 ### Running the Vungle sample app
 To run our sample app, download our Unity Sample app.  Create a new project in Unity.  With Unity open and your project presented, double-click the downloaded VunglePlugin.unitypackage file to add the Vungle Unity Plugin to your application.
@@ -25,6 +25,9 @@ Press Command + Shift + B to open up Build Settings.  Click on iOS or Android th
 In the Build Settings window click on Player Settings.  In Inspector, make sure Company Name, Product Name, Package Name are your own and correct values.
 
 ## Release Notes
+
+#### VERSION 4.1.3
+* Integrated Windows Publisher SDK v2.0.8
 
 #### VERSION 4.1.1
 * Integrated iOS Publisher SDK v5.1.0
