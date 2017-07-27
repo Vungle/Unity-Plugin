@@ -3,11 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
 
-#if UNITY_IPHONE || UNITY_ANDROID
+#if UNITY_IPHONE || UNITY_ANDROID || UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
 public class TitleGUI : MonoBehaviour {
 
 	string iOSAppID = "5912326f0e96c1a540000014";
 	string androidAppID = "591236625b2480ac40000028";
+	string windowsAppID = "59792a4f057243276200298a";
 
 #if UNITY_IPHONE
 	Dictionary<string, bool> placements = new Dictionary<string, bool>
@@ -16,12 +17,19 @@ public class TitleGUI : MonoBehaviour {
 		{ "PLMT02I58266", false },
 		{ "PLMT03R65406", false }
 	};
-#else
+#elif UNITY_ANDROID
 	Dictionary<string, bool> placements = new Dictionary<string, bool>
 	{
 		{ "DEFAULT18080", false },
 		{ "PLMT02I58745", false },
 		{ "PLMT03R02739", false }
+	};
+#elif UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
+	Dictionary<string, bool> placements = new Dictionary<string, bool>
+	{
+		{ "DEFAULT18154", false },
+		{ "PLACEME92007", false },
+		{ "REWARDP93292", false }
 	};
 #endif
 
@@ -64,10 +72,13 @@ public class TitleGUI : MonoBehaviour {
 		placementIdList = new List<string>(placements.Keys);
 
 		string appID;
+
 #if UNITY_IPHONE
-appID = iOSAppID;
-#else
+		appID = iOSAppID;
+#elif UNITY_ANDROID
 		appID = androidAppID;
+#elif UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
+		appID = windowsAppID
 #endif
 
 		appIDText.text = "App ID: " + appID;
@@ -92,11 +103,15 @@ appID = iOSAppID;
 		string[] array = new string[placements.Keys.Count];
 		placements.Keys.CopyTo(array, 0);
 		string appID;
+
 #if UNITY_IPHONE
-appID = iOSAppID;
-#else
+		appID = iOSAppID;
+#elif UNITY_ANDROID
 		appID = androidAppID;
+#elif UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
+		appID = windowsAppID
 #endif
+
 		Vungle.init(appID,array);
 		initializeEventHandlers ();
 	}
