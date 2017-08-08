@@ -78,7 +78,7 @@ public class TitleGUI : MonoBehaviour {
 #elif UNITY_ANDROID
 		appID = androidAppID;
 #elif UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
-		appID = windowsAppID
+		appID = windowsAppID;
 #endif
 
 		appIDText.text = "App ID: " + appID;
@@ -109,7 +109,7 @@ public class TitleGUI : MonoBehaviour {
 #elif UNITY_ANDROID
 		appID = androidAppID;
 #elif UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
-		appID = windowsAppID
+		appID = windowsAppID;
 #endif
 
 		Vungle.init(appID,array);
