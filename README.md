@@ -26,7 +26,7 @@ In the Build Settings window click on Player Settings.  In Inspector, make sure 
 
 ## Release Notes
 
-#### VERSION 4.1.7
+#### VERSION 4.1.9
 * Integrated Windows Publisher SDK v5.1.0
 
 ## License
