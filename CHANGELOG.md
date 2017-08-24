@@ -1,5 +1,8 @@
 ## Changelog
 
+#### VERSION 4.1.9
+* Integrated Windows Publisher SDK v5.1.0
+
 #### VERSION 4.1.3
 * Integrated Windows Publisher SDK v2.0.8
 
