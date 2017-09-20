@@ -26,8 +26,8 @@ In the Build Settings window click on Player Settings.  In Inspector, make sure 
 
 ## Release Notes
 
-#### VERSION 4.1.9
-* Integrated Windows Publisher SDK v5.1.0
+#### VERSION 5.2.1
+* Integrated iOS Publisher SDK v5.2.0
 
 ## License
 The Vungle Unity-Plugin is available under a commercial license. See the LICENSE file for more info.
