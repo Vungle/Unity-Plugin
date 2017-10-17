@@ -1,5 +1,9 @@
 ## Changelog
 
+#### VERSION 5.3.0
+* Integrated iOS Publisher SDK v5.3.0
+* Integrated Android Publisher SDK v5.3.0
+
 #### VERSION 5.2.1
 * Integrated iOS Publisher SDK v5.2.0
 
