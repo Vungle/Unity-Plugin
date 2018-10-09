@@ -107,9 +107,6 @@ public class TitleGUI : MonoBehaviour {
 		DebugLog("Initializing the Vungle SDK");
 
 		initSDKButton.interactable = false;
-
-		string[] array = new string[placements.Keys.Count];
-		placements.Keys.CopyTo(array, 0);
 		string appID;
 
 #if UNITY_IPHONE
@@ -120,7 +117,8 @@ public class TitleGUI : MonoBehaviour {
 		appID = windowsAppID;
 #endif
 
-		Vungle.init(appID,array);
+		// As of 6.3.0 Vungle Unity Plugin no longer requires placement IDs on startup
+		Vungle.init(appID);
 		initializeEventHandlers ();
 	}
 
@@ -180,6 +178,10 @@ public class TitleGUI : MonoBehaviour {
 			consentButton.gameObject.GetComponent<Image>().color = Color.green;
 			Vungle.updateConsentStatus(consentState);
 		}
+
+		// Can also set a message sent with all traffic for GDPR versioning
+		// string message = "custom_message";
+		// Vungle.updateConsentStatus(consentState, message); 
 	}	
 	*/
 
