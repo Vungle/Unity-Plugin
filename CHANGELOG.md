@@ -31,6 +31,9 @@
 #### VERSION 4.0.2
 * Placements feature implemented.
 
+#### VERSION 3.1.35
+* Integrated Android Publisher SDK v4.1.0
+
 #### VERSION 3.1.34
 * Integrated iOS Publisher SDK v4.1.0
 

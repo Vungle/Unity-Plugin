@@ -38,5 +38,8 @@ In the Build Settings window click on Player Settings.  In Inspector, make sure 
 #### VERSION 5.4.0
 * Integrated iOS Publisher SDK v5.4.0
 
+#### VERSION 3.1.35
+* Integrated Android Publisher SDK v4.1.0
+
 ## License
 The Vungle Unity-Plugin is available under a commercial license. See the LICENSE file for more info.
