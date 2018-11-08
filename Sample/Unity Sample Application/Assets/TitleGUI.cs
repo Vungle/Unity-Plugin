@@ -1,191 +1,247 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+using UnityEngine.UI;
 
-#if UNITY_IPHONE || UNITY_ANDROID || UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
+// To ensure proper behavior of the Vungle SDK, please target an iOS, Android, or Windows platform in the Unity Editor.
 public class TitleGUI : MonoBehaviour {
+#if UNITY_IPHONE || UNITY_ANDROID || UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
 
-	//UI Sizing 
-	int buttonCount = 3;
-	int buttonHeight;
-	int headerHeight;
-	int spacerHeight = 5;
+	// These AppIDs point to Vungle test applications on the dashboard.
+	// Replace these with your own AppIDs to test your app's dashboard settings.
+	string iOSAppID = "5912326f0e96c1a540000014";
+	string androidAppID = "591236625b2480ac40000028";
+	string windowsAppID = "59792a4f057243276200298a";
 
-	//Textures
-	Texture2D vungleLogo;
-	Texture2D playDefaultAdTexture;
-	Texture2D playIncentivizedAdTexture;
-	Texture2D playCustomAdTexture;
-	Texture2D whiteBackgroundTexture;
+	// These PlacementIDs point to Vungle test applications on the dashboard.
+	// Replace these with your own PlacementIDs to test your placements' dashboard settings.
+#if UNITY_IPHONE
+	Dictionary<string, bool> placements = new Dictionary<string, bool>
+	{
+		{ "DEFAULT63997", false },
+		{ "PLMT02I58266", false },
+		{ "PLMT03R65406", false }
+	};
+#elif UNITY_ANDROID
+	Dictionary<string, bool> placements = new Dictionary<string, bool>
+	{
+		{ "DEFAULT18080", false },
+		{ "PLMT02I58745", false },
+		{ "PLMT03R02739", false }
+	};
+#elif UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
+	Dictionary<string, bool> placements = new Dictionary<string, bool>
+	{
+		{ "DEFAULT18154", false },
+		{ "PLACEME92007", false },
+		{ "REWARDP93292", false }
+	};
+#endif
 
-	//GUI Styles
-	GUIStyle imageButtonStyle;
-	GUIStyle titleLabelStyle;
-	GUIStyle uiStyle;
+	public Button initSDKButton;
+	public Button playPlacement1Button;
+	public Button loadPlacement2Button;
+	public Button playPlacement2Button;
+	public Button loadPlacement3Button;
+	public Button playPlacement3Button;
+	public Text appIDText;
+	public Text placementID1Text;
+	public Text placementID2Text;
+	public Text placementID3Text;
 
-	string logTag = "VungleSample-UNITY-";
-	// Use this for initialization
+	List<string> placementIdList;
+
+	bool adInited = false;
+
+
 	void Start () {
-
-		DebugLog("Initializing the Vungle SDK");
-		Vungle.init ("Test_Android", "Test_iOS", "vungleTest");
-
-		//Initialize Everything
-		initializeTextures ();
-		initializeGUIStyles ();
-		initializeUISizes ();
-		initializeEventHandlers ();
-
+		SetupButtonsAndText();
 	}
-	
-	// Update is called once per frame
+
+
 	void Update () {
-		
+		updateButtonState ();
 	}
 
-	// Called when the player pauses
+
 	void OnApplicationPause(bool pauseStatus) {
-		if (pauseStatus)
-			Vungle.onPause();
-		else
-			Vungle.onResume();
-	}
-	
-	void OnGUI () {
-
-		//Begin overall view layout
-		uiStyle.normal.background = whiteBackgroundTexture;
-		GUILayout.BeginArea (new Rect (0, 0, Screen.width, Screen.height), uiStyle);
-
-		GUILayout.FlexibleSpace ();
-
-		//Vungle Header
-		GUILayout.BeginHorizontal ();
-		GUILayout.FlexibleSpace ();
-		GUILayout.Label (vungleLogo, titleLabelStyle, GUILayout.Height ((int)(headerHeight * .67)));
-		GUILayout.FlexibleSpace ();
-		GUILayout.EndHorizontal ();
-
-		GUILayout.FlexibleSpace ();
-
-		//Only enable the buttons if we've got a cached ad ready to play
-		GUI.enabled = Vungle.isAdvertAvailable();
-		//Default PlayAd Button + onClick Handler
-		if (GUILayout.Button (playDefaultAdTexture, imageButtonStyle, GUILayout.Height (buttonHeight))) {
-			//Play default ad on click
-			Vungle.playAd ();
-		}
-
-		//Incentivized Ad Button + onClick Handler
-		if (GUILayout.Button (playIncentivizedAdTexture, imageButtonStyle, GUILayout.Height (buttonHeight))) {
-			//Play Incentivized Ad on click
-			Vungle.playAd(true, "example user name");
-		}
-
-		//Play Ad with All Options Button + onClick handler
-		if (GUILayout.Button (playCustomAdTexture, imageButtonStyle, GUILayout.Height (buttonHeight))) {
-			//Start the ad muted, unincentivized, and with a user info string
-			Vungle.setSoundEnabled(false);
-			Vungle.playAd(false, "a different user name");
-		}
-		GUI.enabled = true;
-		
-		GUILayout.EndArea ();
-	}
-
-	/* Setup default textures (from static PNG images) to be used on the interface buttons */
-	void initializeTextures() {
-
-		whiteBackgroundTexture = singleColorTex (Screen.width, Screen.height, Color.white);
-
-		vungleLogo = (Texture2D)Resources.Load ("VungleLogo");
-		if (vungleLogo == null) {
-			DebugLog("vungleLogo texture didn't load!");
-		}
-		playDefaultAdTexture = (Texture2D)Resources.Load ("PlayDefaultAdButton");
-		if (playDefaultAdTexture == null) {
-			DebugLog("defaultAdButton texture didn't load!");
-		}
-		playIncentivizedAdTexture = (Texture2D)Resources.Load ("PlayIncentivizedAdButton");
-		if (playIncentivizedAdTexture == null) {
-			DebugLog("playIncentivizedAdTexture texture didn't load!");
-		}
-		playCustomAdTexture = (Texture2D)Resources.Load ("PlayCustomAdButton");
-		if (playCustomAdTexture == null) {
-			DebugLog("playCustomAdTexture texture didn't load!");
+		if (pauseStatus) {
+			Vungle.onPause ();
+		} else {
+			Vungle.onResume ();
 		}
 	}
 
-	/* Setup the default GUIStyles used in the main interface */
-	void initializeGUIStyles() {
-		imageButtonStyle = new GUIStyle ();
-		imageButtonStyle.stretchHeight = true;
-		imageButtonStyle.stretchWidth = true;
-		imageButtonStyle.fixedWidth = Screen.width;
-		imageButtonStyle.fixedHeight = buttonHeight;
-		
-		uiStyle = new GUIStyle ();
 
-		titleLabelStyle = new GUIStyle ();
-		titleLabelStyle.stretchWidth = true;
-		titleLabelStyle.stretchHeight = true;
-		titleLabelStyle.fixedWidth = Screen.width;
-		titleLabelStyle.fixedHeight = headerHeight;
-		titleLabelStyle.alignment = TextAnchor.MiddleCenter;
-	}
-		
-	/* Setup size constants used to organize and align main interface */
-	void initializeUISizes () {
-		headerHeight = (int)(Screen.height * 0.1);
-		int adjustedScreenHeight = Screen.height - headerHeight - (2 * spacerHeight);
-		buttonHeight = adjustedScreenHeight / buttonCount;
+	// UI initialization
+	void SetupButtonsAndText () {
+		placementIdList = new List<string>(placements.Keys);
+		string appID;
+
+#if UNITY_IPHONE
+		appID = iOSAppID;
+#elif UNITY_ANDROID
+		appID = androidAppID;
+#elif UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
+		appID = windowsAppID;
+#endif
+
+		appIDText.text = "App ID: " + appID;
+		placementID1Text.text = "Placement ID: " + placementIdList [0]; 
+		placementID2Text.text = "Placement ID: " + placementIdList [1]; 
+		placementID3Text.text = "Placement ID: " + placementIdList [2]; 
+
+		initSDKButton.onClick.AddListener (onInitButton);
+		initSDKButton.interactable = true;
+		playPlacement1Button.onClick.AddListener (onPlayPlacement1);
+		loadPlacement2Button.onClick.AddListener (onLoadPlacement2);
+		playPlacement2Button.onClick.AddListener (onPlayPlacement2);
+		loadPlacement3Button.onClick.AddListener (onLoadPlacement3);
+		playPlacement3Button.onClick.AddListener (onPlayPlacement3);
 	}
 
-	/* Setup EventHandlers for all available Vungle events */
+
+	// Vungle SDK initialization
+	// Uses an AppID for iOS, Android, or Windows depending on platform
+	void onInitButton() {
+		DebugLog("Initializing the Vungle SDK");
+
+		initSDKButton.interactable = false;
+		string appID;
+
+#if UNITY_IPHONE
+		appID = iOSAppID;
+#elif UNITY_ANDROID
+		appID = androidAppID;
+#elif UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
+		appID = windowsAppID;
+#endif
+
+		// As of 6.3.0 Vungle Unity Plugin no longer requires placement IDs on startup
+		Vungle.init(appID);
+		initializeEventHandlers ();
+	}
+
+
+	void onPlayPlacement1 () {
+		Vungle.playAd(placementIdList[0]);
+	}
+
+
+	void onLoadPlacement2 () {
+		Vungle.loadAd(placementIdList[1]);
+	}
+
+
+	void onPlayPlacement2 () {
+		// option to change orientation
+		Dictionary<string, object> options = new Dictionary<string, object> ();
+#if UNITY_IPHONE
+		options ["orientation"] = 5;
+#else
+		options ["orientation"] = true;
+#endif
+
+		Vungle.playAd(options, placementIdList[1]);
+	}
+
+
+	void onLoadPlacement3 () {
+		Vungle.loadAd(placementIdList[2]);
+	}
+
+
+	void onPlayPlacement3 () {
+		// option to customize alert window and send user_id
+		Dictionary<string, object> options = new Dictionary<string, object> ();
+		options ["userTag"] = "test_user_id";
+		options ["alertTitle"] = "Careful!";
+		options ["alertText"] = "If the video isn't completed you won't get your reward! Are you sure you want to close early?";
+		options ["closeText"] = "Close";
+		options ["continueText"] = "Keep Watching";
+
+		Vungle.playAd(options, placementIdList[2]);
+	}
+
+
+	// Manual implementation of GDPR compliance code
+	// To use, attach this function to a button click event
+	/*
+	void onConsentButton() {
+		if(consentState == Vungle.Consent.Accepted) {
+			consentState = Vungle.Consent.Denied;
+			consentButton.gameObject.GetComponent<Image>().color = Color.red;
+			Vungle.updateConsentStatus(consentState);
+		}	
+		else {
+			consentState = Vungle.Consent.Accepted;
+			consentButton.gameObject.GetComponent<Image>().color = Color.green;
+			Vungle.updateConsentStatus(consentState);
+		}
+
+		// Can also set a message sent with all traffic for GDPR versioning
+		// string message = "custom_message";
+		// Vungle.updateConsentStatus(consentState, message); 
+	}	
+	*/
+
+
+	void updateButtonState() {
+		playPlacement1Button.interactable = placements[placementIdList[0]];
+		loadPlacement2Button.interactable = adInited & !placements[placementIdList[1]];
+		playPlacement2Button.interactable = placements[placementIdList[1]];
+		loadPlacement3Button.interactable = adInited & !placements[placementIdList[2]];
+		playPlacement3Button.interactable = placements[placementIdList[2]];
+	}
+
+
+	// Setup EventHandlers for all available Vungle events
 	void initializeEventHandlers() {
 
-		//Event triggered during when an ad is about to be played
-		Vungle.onAdStartedEvent += () => {
-			DebugLog ("Ad event is starting!  Pause your game  animation or sound here.");
+		// Event triggered during when an ad is about to be played
+		Vungle.onAdStartedEvent += (placementID) => {
+			DebugLog ("Ad " + placementID + " is starting!  Pause your game  animation or sound here.");
 		};
 
-		//Event is triggered when a Vungle ad finished and provides the entire information about this event
-		//These can be used to determine how much of the video the user viewed, if they skipped the ad early, etc.
-		Vungle.onAdFinishedEvent += (args) => {
-			DebugLog ("Ad finished - watched time:" + args.TimeWatched + ", total duration:" + args.TotalDuration 
-			          + ", was call to action clicked:" + args.WasCallToActionClicked +  ", is completed view:" 
-			          + args.IsCompletedView);
+		// Event is triggered when a Vungle ad finished and provides the entire information about this event
+		// These can be used to determine how much of the video the user viewed, if they skipped the ad early, etc.
+		Vungle.onAdFinishedEvent += (placementID, args) => {
+			DebugLog ("Ad finished - placementID " + placementID + ", was call to action clicked:" + args.WasCallToActionClicked +  ", is completed view:" 
+				+ args.IsCompletedView);
 		};
 
-		//Event is triggered when the ad's playable state has been changed
-		//It can be used to enable certain functionality only accessible when ad plays are available
-		Vungle.adPlayableEvent += (adPlayable) => {
-			DebugLog ("Ad's playable state has been changed! Now: " + adPlayable);
+		// Event is triggered when the ad's playable state has been changed
+		// It can be used to enable certain functionality only accessible when ad plays are available
+		Vungle.adPlayableEvent += (placementID, adPlayable) => {
+			DebugLog ("Ad's playable state has been changed! placementID " + placementID + ". Now: " + adPlayable);
+			placements[placementID] = adPlayable;
 		};
 
-		//Fired log event from sdk
-		Vungle.onLogEvent += (log) => {
+		//Fired initialize event from sdk
+		Vungle.onInitializeEvent += () => {
+			adInited = true;
+			DebugLog ("SDK initialized");
+		};
+
+		// Other events
+		/*
+		//Vungle.onLogEvent += (log) => {
 			DebugLog ("Log: " + log);
 		};
 
-	}
-
-	/* Basic method used for building out the background texture for the main interface */
-	Texture2D singleColorTex(int width, int height, Color col) {
-		Color[] pix = new Color[width * height];
-		for (int i=0; i<pix.Length; i++) {
-			pix[i] = col;
-		}
-
-		Texture2D tex = new Texture2D (width, height);
-		tex.SetPixels (pix);
-		tex.Apply ();
-
-		return tex;
+		Vungle.onPlacementPreparedEvent += (placementID, bidToken) => {
+		    DebugLog ("<onPlacementPreparedEvent> Placement Ad is prepared with bidToken! " + placementID + " " + bidToken);
+		};
+		 
+		Vungle.onVungleCreativeEvent += (placementID, creativeID) => {
+		    DebugLog ("<onVungleCreativeEvent> Placement Ad is about to play with creative ID " + placementID + " " + creativeID);
+		};
+		*/
 	}
 
 	/* Common method for ensuring logging messages have the same format */
 	void DebugLog(string message) {
-		Debug.Log(logTag + System.DateTime.Today +": " + message);
+		Debug.Log("VungleUnitySample " + System.DateTime.Today +": " + message);
 	}
-}
 #endif
+}

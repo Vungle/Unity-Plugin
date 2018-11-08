@@ -1,5 +1,36 @@
 ## Changelog
 
+#### VERSION 6.2.0
+* Integrated iOS Publisher SDK v6.2.0
+* Integrated Android Publisher SDK v6.2.5
+
+#### VERSION 5.4.0
+* Integrated iOS Publisher SDK v5.4.0
+
+#### VERSION 5.3.2
+* Integrated iOS Publisher SDK v5.3.2
+* Integrated Android Publisher SDK v5.3.2
+
+#### VERSION 5.3.0
+* Integrated iOS Publisher SDK v5.3.0
+* Integrated Android Publisher SDK v5.3.0
+
+#### VERSION 5.2.1
+* Integrated iOS Publisher SDK v5.2.0
+
+#### VERSION 4.1.9
+* Integrated Windows Publisher SDK v5.1.0
+
+#### VERSION 4.1.3
+* Integrated Windows Publisher SDK v2.0.8
+
+#### VERSION 4.1.1
+* Integrated iOS Publisher SDK v5.1.0
+* Integrated Android Publisher SDK v5.1.0
+
+#### VERSION 4.0.2
+* Placements feature implemented.
+
 #### VERSION 3.1.35
 * Integrated Android Publisher SDK v4.1.0
 
