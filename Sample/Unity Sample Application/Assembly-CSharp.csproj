@@ -52,9 +52,6 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\TitleGUI.cs" />
- <Reference Include="Assembly-CSharp-firstpass">
- <HintPath>/Users/christopher.ueda/Documents/GitHub/Unity-Plugin/Sample/Unity Sample Application/Library/ScriptAssemblies/Assembly-CSharp-firstpass.dll</HintPath>
- </Reference>
  <Reference Include="UnityEngine.UI">
  <HintPath>/Applications/Unity 2017.3.1/Unity 2017.3.1.app/Contents/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>
