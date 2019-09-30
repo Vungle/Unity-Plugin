@@ -26,6 +26,11 @@ In the Build Settings window click on Player Settings.  In Inspector, make sure 
 
 ## Release Notes
 
+#### VERSION 6.4.3
+* Integrated iOS Publisher SDK v6.4.5
+* Integrated Android Publisher SDK v6.4.11
+* Integrated Windows Publisher SDK v6.4.1
+
 #### VERSION 6.4.2
 * Integrated iOS Publisher SDK v6.4.3
 * Integrated Android Publisher SDK v6.4.11
