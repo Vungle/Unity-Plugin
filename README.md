@@ -1,14 +1,13 @@
 # Vungle's Unity-Plugin
 
 ## Getting Started
-To get up and running with Vungle, you'll need to [Create an Account With Vungle](https://v.vungle.com/dashboard) and [Add an Application to the Vungle Dashboard](https://support.vungle.com/hc/en-us/articles/210468678)
-
-Once you've created an account you can follow our [Getting Started for Unity Guide](https://support.vungle.com/hc/en-us/articles/360003455452) to complete the integration. Remember to get the Vungle App ID from the Vungle dashboard.
+Please follow our [Getting Started for Unity Guide](https://support.vungle.com/hc/en-us/articles/360003455452) to complete the integration. Remember to get the Vungle App ID from the Vungle dashboard.
 
 ### Vungle Unity Plugijn Requirements
-* iOS supports Unity 5.4.1 or higher and Unity 2017
-* Android supports Unity 5.3.2 or higher and Unity 2017.
-* Windows supports Unity 5.3.2 or higher and Unity 2017.
+* iOS supports Unity 5.4.1+, 2017, 2018 and 2019
+* Android supports Unity 5.3.2+, 2017, 2018 and 2019
+* Windows supports Unity 5.3.2+ and Unity 2017
+** Unity 2018 and 2019 is not supported for Windows
 
 ### Running the Vungle sample app
 To run our sample app, download our Unity Sample app.  Create a new project in Unity.  With Unity open and your project presented, double-click the included VunglePlugin-6.4.4.unitypackage file to add the Vungle Unity Plugin to your application.
@@ -26,6 +25,16 @@ Press Command + Shift + B to open up Build Settings.  Click on iOS or Android th
 In the Build Settings window click on Player Settings.  In Inspector, make sure Company Name, Product Name, Package Name are your own and correct values.
 
 ## Release Notes
+
+#### VERSION 6.5.1
+* Integrated iOS Publisher SDK v6.5.1
+* Integrated Android Publisher SDK v6.5.1
+* Integrated Windows Publisher SDK v6.5.1
+
+#### VERSION 6.4.4
+* Integrated iOS Publisher SDK v6.4.6
+* Integrated Android Publisher SDK v6.4.11
+* Integrated Windows Publisher SDK v6.4.1
 
 #### VERSION 6.4.4
 * Integrated iOS Publisher SDK v6.4.6
