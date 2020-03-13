@@ -201,6 +201,9 @@ public class TitleGUI : MonoBehaviour {
 		// Event triggered during when an ad is about to be played
 		Vungle.onAdStartedEvent += (placementID) => {
 			DebugLog ("Ad " + placementID + " is starting!  Pause your game  animation or sound here.");
+			#if UNITY_ANDROID
+				placements[placementID] = false;
+			#endif
 		};
 
 		// Event is triggered when a Vungle ad finished and provides the entire information about this event

@@ -6,8 +6,7 @@ Please follow our [Getting Started for Unity Guide](https://support.vungle.com/h
 ### Vungle Unity Plugijn Requirements
 * iOS supports Unity 5.4.1+, 2017, 2018 and 2019
 * Android supports Unity 5.3.2+, 2017, 2018 and 2019
-* Windows supports Unity 5.3.2+ and Unity 2017
-** Unity 2018 and 2019 is not supported for Windows
+* Windows supports Unity 5.3.2+, 2017, 2018 and 2019
 
 ### Running the Vungle sample app
 To run our sample app, download our Unity Sample app.  Create a new project in Unity.  With Unity open and your project presented, double-click the included VunglePlugin-6.4.4.unitypackage file to add the Vungle Unity Plugin to your application.
@@ -25,6 +24,11 @@ Press Command + Shift + B to open up Build Settings.  Click on iOS or Android th
 In the Build Settings window click on Player Settings.  In Inspector, make sure Company Name, Product Name, Package Name are your own and correct values.
 
 ## Release Notes
+
+#### VERSION 6.5.2
+* Integrated iOS Publisher SDK v6.5.2
+* Integrated Android Publisher SDK v6.5.2
+* Integrated Windows Publisher SDK v6.5.2
 
 #### VERSION 6.5.2
 * Integrated iOS Publisher SDK v6.5.2
