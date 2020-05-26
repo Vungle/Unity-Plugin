@@ -9,26 +9,28 @@ public class TitleGUI : MonoBehaviour {
 
 	// These AppIDs point to Vungle test applications on the dashboard.
 	// Replace these with your own AppIDs to test your app's dashboard settings.
-	string iOSAppID = "5912326f0e96c1a540000014";
-	string androidAppID = "591236625b2480ac40000028";
-	string windowsAppID = "59792a4f057243276200298a";
+    string iOSAppID = "5af083df47c10a604be1ceb3";
+    string androidAppID = "5ae0db55e2d43668c97bd65e";
+    string windowsAppID = "59792a4f057243276200298a";
 
 	// These PlacementIDs point to Vungle test applications on the dashboard.
 	// Replace these with your own PlacementIDs to test your placements' dashboard settings.
+#endif
+
 #if UNITY_IPHONE
-	Dictionary<string, bool> placements = new Dictionary<string, bool>
-	{
-		{ "DEFAULT63997", false },
-		{ "PLMT02I58266", false },
-		{ "PLMT03R65406", false }
-	};
+    Dictionary<string, bool> placements = new Dictionary<string, bool>
+    {
+        { "DEFAULT-0547777", false },
+        { "DYNAMIC_TEMPLATE_INTERSTITIAL-4765638", false },
+        { "LEGACY_REWARDED-1906578", false }
+    };
 #elif UNITY_ANDROID
-	Dictionary<string, bool> placements = new Dictionary<string, bool>
-	{
-		{ "DEFAULT18080", false },
-		{ "PLMT02I58745", false },
-		{ "PLMT03R02739", false }
-	};
+    Dictionary<string, bool> placements = new Dictionary<string, bool>
+    {
+        { "DEFAULT-6595425", false },
+        { "LEGACY_INTERSTITIAL-4364832", false },
+        { "LEGACY_REWARDED-2115035", false }
+    };
 #elif UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
 	Dictionary<string, bool> placements = new Dictionary<string, bool>
 	{
@@ -36,6 +38,15 @@ public class TitleGUI : MonoBehaviour {
 		{ "PLACEME92007", false },
 		{ "REWARDP93292", false }
 	};
+#endif
+
+#if UNITY_IPHONE
+    string banner = "BANNER-8667763";
+#elif UNITY_ANDROID
+    string banner = "BANNER-5454585";
+#elif UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
+    // Banner and MREC are not yet surported for Windows as of v6.7.0.0-early1
+    string banner = "";
 #endif
 
 	public Button initSDKButton;
@@ -71,7 +82,6 @@ public class TitleGUI : MonoBehaviour {
 			Vungle.onResume ();
 		}
 	}
-
 
 	// UI initialization
 	void SetupButtonsAndText () {
@@ -116,8 +126,21 @@ public class TitleGUI : MonoBehaviour {
 #elif UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
 		appID = windowsAppID;
 #endif
+		
+		// CCPA
+        // Vungle.updateCCPAStatus(Vungle.Consent.Denied);
+        // DebugLog ("Current CCPA Status - " + Vungle.getCCPAStatus());
 
-		// As of 6.3.0 Vungle Unity Plugin no longer requires placement IDs on startup
+		// GDPR
+        // string message = "GDPR_consent_version";
+        // Vungle.updateConsentStatus(Vungle.Consent.Denied, message);
+        // DebugLog ("Current GDPR Status - " + Vungle.getConsentStatus());
+
+        // Optional Advanced Configuration
+        // Vungle.SetMinimumDiskSpaceForInitialization(55000);
+        // Vungle.SetMinimumDiskSpaceForAd(50000);
+        // Vungle.EnableHardwareIdPrivacy(true);
+        
 		Vungle.init(appID);
 		initializeEventHandlers ();
 	}
@@ -218,33 +241,29 @@ public class TitleGUI : MonoBehaviour {
 		Vungle.adPlayableEvent += (placementID, adPlayable) => {
 			DebugLog ("Ad's playable state has been changed! placementID " + placementID + ". Now: " + adPlayable);
 			placements[placementID] = adPlayable;
+
+			DebugLog ("isAdvertAvailable " + placementID + " : " + Vungle.isAdvertAvailable(placementID));
+			if (placementID == banner) {
+                Vungle.showBanner(placementID);
+            } 
 		};
 
 		//Fired initialize event from sdk
 		Vungle.onInitializeEvent += () => {
 			adInited = true;
 			DebugLog ("SDK initialized");
+
+			Vungle.loadBanner(banner, Vungle.VungleBannerSize.VungleAdSizeBanner, Vungle.VungleBannerPosition.BottomCenter);
 		};
 
 		// Other events
-		/*
-		//Vungle.onLogEvent += (log) => {
-			DebugLog ("Log: " + log);
-		};
-
-		Vungle.onPlacementPreparedEvent += (placementID, bidToken) => {
-		    DebugLog ("<onPlacementPreparedEvent> Placement Ad is prepared with bidToken! " + placementID + " " + bidToken);
-		};
-		 
-		Vungle.onVungleCreativeEvent += (placementID, creativeID) => {
-		    DebugLog ("<onVungleCreativeEvent> Placement Ad is about to play with creative ID " + placementID + " " + creativeID);
-		};
-		*/
+		// Vungle.onLogEvent += (log) => {
+		// 	 DebugLog ("Log: " + log);
+		// };
 	}
 
 	/* Common method for ensuring logging messages have the same format */
 	void DebugLog(string message) {
 		Debug.Log("VungleUnitySample " + System.DateTime.Today +": " + message);
 	}
-#endif
 }
