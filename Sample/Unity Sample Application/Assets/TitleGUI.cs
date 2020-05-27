@@ -40,6 +40,10 @@ public class TitleGUI : MonoBehaviour {
 	};
 #endif
 
+	// Banner
+	Vungle.VungleBannerSize bannerSize = Vungle.VungleBannerSize.VungleAdSizeBanner;
+	Vungle.VungleBannerPosition bannerPosition = Vungle.VungleBannerPosition.BottomCenter;
+
 #if UNITY_IPHONE
     string banner = "BANNER-8667763";
 #elif UNITY_ANDROID
@@ -242,10 +246,9 @@ public class TitleGUI : MonoBehaviour {
 			DebugLog ("Ad's playable state has been changed! placementID " + placementID + ". Now: " + adPlayable);
 			placements[placementID] = adPlayable;
 
-			DebugLog ("isAdvertAvailable " + placementID + " : " + Vungle.isAdvertAvailable(placementID));
-			if (placementID == banner) {
-                Vungle.showBanner(placementID);
-            } 
+			if (placementID == banner && Vungle.isAdvertAvailable(banner, bannerSize)) {
+				Vungle.showBanner(banner);
+			}
 		};
 
 		//Fired initialize event from sdk
@@ -253,7 +256,11 @@ public class TitleGUI : MonoBehaviour {
 			adInited = true;
 			DebugLog ("SDK initialized");
 
-			Vungle.loadBanner(banner, Vungle.VungleBannerSize.VungleAdSizeBanner, Vungle.VungleBannerPosition.BottomCenter);
+			if (Vungle.isAdvertAvailable(banner, bannerSize)) {
+				Vungle.showBanner(banner);
+			} else {
+				Vungle.loadBanner(banner, bannerSize, bannerPosition);
+			}
 		};
 
 		// Other events
