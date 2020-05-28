@@ -41,7 +41,7 @@ public class TitleGUI : MonoBehaviour {
 #endif
 
 	// Banner
-	Vungle.VungleBannerSize bannerSize = Vungle.VungleBannerSize.VungleAdSizeBanner;
+	Vungle.VungleBannerSize bannerSize = Vungle.VungleBannerSize.VungleAdSizeBannerMedium;
 	Vungle.VungleBannerPosition bannerPosition = Vungle.VungleBannerPosition.BottomCenter;
 
 #if UNITY_IPHONE
