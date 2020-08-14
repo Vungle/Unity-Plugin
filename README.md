@@ -3,7 +3,7 @@
 ## Getting Started
 Please follow our [Getting Started for Unity Guide](https://support.vungle.com/hc/en-us/articles/360003455452) to complete the integration. Remember to get the Vungle App ID from the Vungle dashboard.
 
-### Vungle Unity Plugijn Requirements
+### Vungle Unity Plugin Requirements
 * iOS supports Unity 5.4.1+, 2017, 2018 and 2019
 * Android supports Unity 5.3.2+, 2017, 2018 and 2019
 * Windows supports Unity 5.3.2+, 2017, 2018 and 2019
