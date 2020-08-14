@@ -1,5 +1,10 @@
 ## Changelog
 
+#### VERSION 6.7.2.1
+* Integrated iOS Publisher SDK v6.7.1
+* Integrated Android Publisher SDK v6.7.1
+* Integrated Windows Publisher SDK v6.7.1
+
 #### VERSION 6.7.0.0
 * Integrated iOS Publisher SDK v6.7.0
 * Integrated Android Publisher SDK v6.7.0
