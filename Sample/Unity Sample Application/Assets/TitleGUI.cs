@@ -89,9 +89,9 @@ public class TitleGUI : MonoBehaviour
 #if UNITY_IPHONE
 		appID = iOSAppID;
 #elif UNITY_ANDROID
-				appID = androidAppID;
+		appID = androidAppID;
 #elif UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
-		        appID = windowsAppID;
+		appID = windowsAppID;
 #endif
 
 		appIDText.text = "App ID: " + appID;
@@ -120,9 +120,9 @@ public class TitleGUI : MonoBehaviour
 #if UNITY_IPHONE
 		appID = iOSAppID;
 #elif UNITY_ANDROID
-				appID = androidAppID;
+		appID = androidAppID;
 #elif UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
-		        appID = windowsAppID;
+		appID = windowsAppID;
 #endif
 
 		string message = "GDPR_message-version-pre-init";
@@ -158,7 +158,7 @@ public class TitleGUI : MonoBehaviour
 #if UNITY_IPHONE
 		options["orientation"] = 6;
 #else
-				options["orientation"] = true;
+		options["orientation"] = true;
 #endif
 
 		Vungle.playAd(options, placementIdList[1]);
