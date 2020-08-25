@@ -30,7 +30,7 @@ In the Build Settings window click on Player Settings.  In Inspector, make sure 
 * Integrated Android Publisher SDK v6.7.1
 * Integrated Windows Publisher SDK v6.7.1
 
-#### VERSION 6.7.0.0
+#### VERSION 6.7.1.0
 * Integrated iOS Publisher SDK v6.7.0.0
 * Integrated Android Publisher SDK v6.7.0.0
 * Integrated Windows Publisher SDK v.6.7.0.0
