@@ -8,37 +8,28 @@ public class BannerGUI : MonoBehaviour
 #if UNITY_IPHONE || UNITY_ANDROID || UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
 
 #if UNITY_IPHONE
-	Dictionary<string, bool> placements = new Dictionary<string, bool> {
+	Dictionary<string, bool> placements = new Dictionary<string, bool>
+	{
 		{ "BANNER04-8166553", false },
 		{ "MREC03-4489762", false },
 		{ "BANNER05-4730786", false }
 	};
+
 #elif UNITY_ANDROID
-	Dictionary<string, bool> placements = new Dictionary<string, bool> {
+	Dictionary<string, bool> placements = new Dictionary<string, bool> 
+	{
 		{ "BANNER-5454585", false },
 		{ "MREC-2191415", false },
 		{ "BANNER2-6990728", false }
 	};
 #elif UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
-	Dictionary<string, bool> placements = new Dictionary<string, bool> {
+	Dictionary<string, bool> placements = new Dictionary<string, bool>
+	{
 		{ "BANNER01-2481140", false },
 		{ "MREC01-4900382", false },
 		{ "BANNER04-2625387", false }
 	};
-#endif
-
-#if UNITY_ANDROID
-	string banner1 = "BANNER-5454585";
-	string banner2 = "BANNER2-6990728";
-	string mrec = "MREC-2191415";
-#elif UNITY_IPHONE
-	string banner1 = "BANNER04-8166553";
-	string mrec = "MREC03-4489762";
-	string banner2 = "BANNER05-4730786";
-#elif UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
-    string banner1 = "BANNER01-2481140";
-    string mrec = "MREC01-4900382";
-    string banner2 = "BANNER04-2625387";
+	
 #endif
 
 	public Button loadBanner1Button;
@@ -210,6 +201,7 @@ public class BannerGUI : MonoBehaviour
 	{
 		Debug.Log("VungleUnity" + System.DateTime.Now + ": " + message);
 	}
+
 #endif
 }
 
