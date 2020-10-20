@@ -6,11 +6,6 @@ using UnityEngine.UI;
 public class BannerGUI : MonoBehaviour
 {
 #if UNITY_IPHONE || UNITY_ANDROID || UNITY_WSA_10_0 || UNITY_WINRT_8_1 || UNITY_METRO
-	// These AppIDs point to Vungle test applications on the dashboard.
-	// Replace these with your own AppIDs to test your app's dashboard settings.
-	string iOSAppID = "5e13cc9d61880b27a65bf735";
-	string androidAppID = "5ae0db55e2d43668c97bd65e";
-	string windowsAppID = "59792a4f057243276200298a";
 
 #if UNITY_IPHONE
 	Dictionary<string, bool> placements = new Dictionary<string, bool> {
@@ -116,52 +111,52 @@ public class BannerGUI : MonoBehaviour
 
 	void onLoadBanner1()
 	{
-		Vungle.loadBanner(banner1, Vungle.VungleBannerSize.VungleAdSizeBanner, Vungle.VungleBannerPosition.TopCenter);
+		Vungle.loadBanner(placementLists[0], Vungle.VungleBannerSize.VungleAdSizeBanner, Vungle.VungleBannerPosition.TopCenter);
 	}
 
 	void onPlayBanner1()
 	{
-		Vungle.showBanner(banner1);
+		Vungle.showBanner(placementLists[0]);
 		closeBanner1Button.interactable = true;
 	}
 
 	void onLoadMrec1()
 	{
-		Vungle.loadBanner(mrec, Vungle.VungleBannerSize.VungleAdSizeBannerMedium, Vungle.VungleBannerPosition.Centered);
+		Vungle.loadBanner(placementLists[1], Vungle.VungleBannerSize.VungleAdSizeBannerMedium, Vungle.VungleBannerPosition.Centered);
 	}
 
 	void onPlayMrec1()
 	{
-		Vungle.showBanner(mrec);
+		Vungle.showBanner(placementLists[1]);
 		closeMrec1Button.gameObject.SetActive(true);
 	}
 
 	void onLoadBanner2()
 	{
-		Vungle.loadBanner(banner2, Vungle.VungleBannerSize.VungleAdSizeBannerShort, Vungle.VungleBannerPosition.BottomCenter);
+		Vungle.loadBanner(placementLists[2], Vungle.VungleBannerSize.VungleAdSizeBannerShort, Vungle.VungleBannerPosition.BottomCenter);
 	}
 
 	void onPlayBanner2()
 	{
-		Vungle.showBanner(banner2);
+		Vungle.showBanner(placementLists[2]);
 		closeBanner2Button.interactable = true;
 	}
 
 	void onCloseBanner1()
 	{
-		Vungle.closeBanner(banner1);
+		Vungle.closeBanner(placementLists[0]);
 		closeBanner1Button.interactable = false;
 	}
 
 	void onCloseMrec1()
 	{
-		Vungle.closeBanner(mrec);
+		Vungle.closeBanner(placementLists[1]);
 		closeMrec1Button.gameObject.SetActive(false);
 	}
 
 	void onCloseBanner2()
 	{
-		Vungle.closeBanner(banner2);
+		Vungle.closeBanner(placementLists[2]);
 		closeBanner2Button.interactable = false;
 	}
 
@@ -215,7 +210,6 @@ public class BannerGUI : MonoBehaviour
 	{
 		Debug.Log("VungleUnity" + System.DateTime.Now + ": " + message);
 	}
-
 #endif
 }
 
