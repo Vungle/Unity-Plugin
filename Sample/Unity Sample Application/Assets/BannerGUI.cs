@@ -195,6 +195,21 @@ public class BannerGUI : MonoBehaviour
 			DebugLog("Banner Ad's playable state has been changed! placementID " + placementID + ". Now: " + adPlayable);
 			placements[placementID] = adPlayable;
 		};
+
+		Vungle.onAdClickEvent += (placementID) => 
+		{
+			DebugLog("onClick - Log: " + placementID);
+		};
+
+		Vungle.onAdRewardedEvent += (placementID) => 
+		{
+			DebugLog("onAdRewardedEvent - Log: " + placementID);
+		};
+
+		Vungle.onAdEndEvent += (placementID) => 
+		{
+			DebugLog("onAdEnd - Log: " + placementID); 
+		};
 	}
 
 	void DebugLog(string message)

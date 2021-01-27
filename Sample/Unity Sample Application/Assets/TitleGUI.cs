@@ -249,6 +249,21 @@ public class TitleGUI : MonoBehaviour
 		{
 			DebugLog("onLogEvent - Log: " + log);
 		};
+
+		Vungle.onAdClickEvent += (placementID) => 
+		{
+			DebugLog("onClick - Log: " + placementID);
+		};
+
+		Vungle.onAdRewardedEvent += (placementID) => 
+		{
+			DebugLog("onAdRewardedEvent - Log: " + placementID);
+		};
+
+		Vungle.onAdEndEvent += (placementID) => 
+		{
+			DebugLog("onAdEnd - Log: " + placementID); 
+		};
 	}
 
 	/* Common method for ensuring logging messages have the same format */
