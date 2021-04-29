@@ -1,5 +1,10 @@
 ## Changelog
 
+#### VERSION 6.10.0.0 (April 28, 2021)
+* Integrated iOS Publisher SDK v6.10.0
+* Integrated Android Publisher SDK v6.9.1
+* Integrated Windows Publisher SDK v6.8.0
+
 #### VERSION 6.9.2.0 (April 14, 2021)
 * Integrated iOS Publisher SDK v6.9.2
 * Integrated Android Publisher SDK v6.9.1
