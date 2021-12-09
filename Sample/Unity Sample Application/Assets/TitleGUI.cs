@@ -125,17 +125,9 @@ public class TitleGUI : MonoBehaviour
 		appID = windowsAppID;
 #endif
 
-		string message = "GDPR_message-version-pre-init";
-		Vungle.updateConsentStatus(Vungle.Consent.Denied, message);
-		Vungle.updateCCPAStatus(Vungle.Consent.Denied);
-
-		DebugLog("onAdFinishedEvent - GDPR " + Vungle.getCCPAStatus());
-		DebugLog("onAdFinishedEvent - CCPA " + Vungle.getConsentStatus());
-
 		// attach event handlers prior to init.
 		initializeEventHandlers();
-
-		// As of 6.3.0 Vungle Unity Plugin no longer requires placement IDs on startup
+		// Initialize Vungle SDK
 		Vungle.init(appID);
 	}
 
@@ -174,12 +166,11 @@ public class TitleGUI : MonoBehaviour
 	{
 		// option to customize alert window and send user_id
 		Dictionary<string, object> options = new Dictionary<string, object>();
-		options["userTag"] = "test_user_id";
-		options["alertTitle"] = "Title";
-		options["alertText"] = "Alert";
-		options["closeText"] = "Close";
-		options["continueText"] = "Continue";
-		options["ordinal"] = "77777";
+ 		options ["userTag"] = "test_user_id";
+ 		options ["alertTitle"] = "Careful!";
+ 		options ["alertText"] = "If the video isn't completed you won't get your reward! Are you sure you want to close early?";
+ 		options ["closeText"] = "Close";
+ 		options ["continueText"] = "Keep Watching";
 
 		Vungle.playAd(options, placementIdList[2]);
 	}
@@ -233,36 +224,39 @@ public class TitleGUI : MonoBehaviour
 		//Fired initialize event from sdk
 		Vungle.onInitializeEvent += () =>
 		{
-
 			adInited = true;
 			toBannersCanvas.interactable = true;
 			DebugLog("onInitializeEvent - SDK initialized");
 
-			string message = "GDPR_message-version";
-			Vungle.updateConsentStatus(Vungle.Consent.Denied, message);
-			Vungle.updateCCPAStatus(Vungle.Consent.Denied);
+			// GDPR and CCPA Consent API
+			// string version = "1.0.0";
+			// Vungle.updateConsentStatus(Vungle.Consent.Denied, version);
+			// Vungle.updateCCPAStatus(Vungle.Consent.Denied);
 
 		};
 
-		// Other events
-		Vungle.onLogEvent += (log) =>
-		{
-			DebugLog("onLogEvent - Log: " + log);
-		};
-
+		// Event is trigger when user has click on the ad
 		Vungle.onAdClickEvent += (placementID) => 
 		{
 			DebugLog("onClick - Log: " + placementID);
 		};
 
+		// Event is trigger for rewarded video when the user should be rewarded for completing video ad
 		Vungle.onAdRewardedEvent += (placementID) => 
 		{
 			DebugLog("onAdRewardedEvent - Log: " + placementID);
 		};
 
+		// Event is trigger when the entire ad experience has ended
 		Vungle.onAdEndEvent += (placementID) => 
 		{
 			DebugLog("onAdEnd - Log: " + placementID); 
+		};
+
+		// Diagnostic events for debugging
+		Vungle.onLogEvent += (log) =>
+		{
+			DebugLog("onLogEvent - Log: " + log);
 		};
 	}
 
