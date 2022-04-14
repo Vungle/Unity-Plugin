@@ -23,6 +23,11 @@ In the Build Settings window click on Player Settings. In Inspector, make sure C
 
 ## Release Notes
 
+#### VERSION 6.10.6.2 (March 10, 2022)
+* Integrated iOS Publisher SDK v6.10.6
+* Integrated Android Publisher SDK v6.10.5
+* Integrated Windows Publisher SDK v6.10.1
+
 #### VERSION 6.10.6.1 (February 9, 2022)
 * Integrated iOS Publisher SDK v6.10.6
 * Integrated Android Publisher SDK v6.10.4
