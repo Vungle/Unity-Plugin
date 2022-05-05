@@ -2,10 +2,8 @@
 *.csproj
 *.meta
 *.asset
-ProjectVersion.txt
-manifest.json
 
-Sample/Unity\ Sample\ Application/ProjectSettings/
-Sample/Unity\ Sample\ Application/UnityPackageManager/
-Sample/Unity\ Sample\ Application/Assets/
-Sample/Unity\ Sample\ Application/Packages/
+Sample/Unity\ Sample\ Application/Assets/Vungle.meta
+Sample/Unity\ Sample\ Application/Assets/Vungle/
+Sample/Unity Sample Application/Assets/CharlesProxy.meta
+Sample/Unity\ Sample\ Application/Assets/CharlesProxy/
