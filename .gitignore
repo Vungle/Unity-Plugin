@@ -1,6 +1,11 @@
+.DS_Store
+*.csproj
+*.meta
+*.asset
+ProjectVersion.txt
+manifest.json
 
-*.csproj
-*.csproj
-Sample/Unity Sample Application/Assembly-CSharp-Editor.csproj
-*.csproj
-*.csproj
+Sample/Unity\ Sample\ Application/ProjectSettings/
+Sample/Unity\ Sample\ Application/UnityPackageManager/
+Sample/Unity\ Sample\ Application/Assets/
+Sample/Unity\ Sample\ Application/Packages/
