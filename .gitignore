@@ -1,7 +1,5 @@
 .DS_Store
 *.csproj
-*.meta
-*.asset
 
 Sample/Unity\ Sample\ Application/Assets/Vungle.meta
 Sample/Unity\ Sample\ Application/Assets/Vungle/
