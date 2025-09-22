@@ -1,0 +1,18 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{4C5C8F02-3A5F-4F7E-ACF9-84F3BAE63A0A}") = "LiftoffUnityBridge", "LiftoffUnityBridge\LiftoffUnityBridge.vcxproj", "{A0E6B8E3-BA90-46F2-9A9C-7F2EA5F2D3AA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A0E6B8E3-BA90-46F2-9A9C-7F2EA5F2D3AA}.Debug|x64.ActiveCfg = Debug|x64
+		{A0E6B8E3-BA90-46F2-9A9C-7F2EA5F2D3AA}.Debug|x64.Build.0 = Debug|x64
+		{A0E6B8E3-BA90-46F2-9A9C-7F2EA5F2D3AA}.Release|x64.ActiveCfg = Release|x64
+		{A0E6B8E3-BA90-46F2-9A9C-7F2EA5F2D3AA}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+EndGlobal
