@@ -1,33 +1,28 @@
+// LiftoffWindows.cs (drop-in replacement)
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace Liftoff.Windows
 {
-    /// <summary>
-    /// Platform-safe Unity wrapper.
-    /// On Windows Standalone / Windows Editor it P/Invokes the native DLL.
-    /// On other platforms (iOS/Android/etc.) it exposes the same API as no-ops so your game compiles.
-    /// </summary>
     public static class LiftoffWindows
     {
-        // ----- Public events (available on all platforms) -----
+        // Public events
         public static event Action OnInitialized;
         public static event Action<int, string> OnInitializationFailed;
-
         public static event Action<string> OnAdLoaded;
         public static event Action<string, int, string> OnAdLoadFailed;
-
         public static event Action<string, string> OnAdStart;
         public static event Action<string> OnAdEnd;
         public static event Action<string, int, string> OnAdPlayFailed;
         public static event Action<string> OnAdRewarded;
         public static event Action<string> OnAdClick;
-		public static event Action<int, string, string> OnDiagnostic;
+        public static event Action<int, string, string> OnDiagnostic; // level, sender, message
 
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-		private static class Native
+        private static class Native
         {
+            // Callback delegates
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             public delegate void InitSuccessCB();
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -48,10 +43,11 @@ namespace Liftoff.Windows
             public delegate void AdRewardedCB([MarshalAs(UnmanagedType.LPWStr)] string placement);
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             public delegate void AdClickCB([MarshalAs(UnmanagedType.LPWStr)] string placement);
-			[UnmanagedFunctionPointer(CallingConvention.StdCall)]
-			public delegate void DiagnosticCB(int level, [MarshalAs(UnmanagedType.LPWStr)] string senderType, [MarshalAs(UnmanagedType.LPWStr)] string message);
 
-			[StructLayout(LayoutKind.Sequential)]
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            public delegate void DiagnosticCB(int level, [MarshalAs(UnmanagedType.LPWStr)] string senderType, [MarshalAs(UnmanagedType.LPWStr)] string message);
+
+            [StructLayout(LayoutKind.Sequential)]
             public struct BridgeCallbacks
             {
                 public InitSuccessCB initSuccess;
@@ -65,8 +61,15 @@ namespace Liftoff.Windows
                 public AdClickCB adClick;
             }
 
+            // P/Invoke
             [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall)]
             public static extern void Liftoff_SetCallbacks(BridgeCallbacks cbs);
+
+            [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall)]
+            public static extern void Liftoff_SetDiagnosticCallback(DiagnosticCB cb);
+
+            [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall)]
+            public static extern void Liftoff_ClearDiagnosticCallback();
 
             [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
             public static extern bool Liftoff_Initialize(string appId, IntPtr hwnd);
@@ -85,15 +88,9 @@ namespace Liftoff.Windows
 
             [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall)]
             public static extern bool Liftoff_IsWebView2Available();
+        }
 
-			[DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall)]
-			public static extern void Liftoff_SetDiagnosticCallback(DiagnosticCB cb);
-
-			[DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall)]
-			public static extern void Liftoff_ClearDiagnosticCallback();
-		}
-
-        // Hold delegates to prevent GC
+        // Keep delegates alive
         static Native.InitSuccessCB _iok;
         static Native.InitFailureCB _ifail;
         static Native.AdLoadSuccessCB _ldok;
@@ -103,87 +100,127 @@ namespace Liftoff.Windows
         static Native.AdPlayFailureCB _pfail;
         static Native.AdRewardedCB _rewarded;
         static Native.AdClickCB _click;
-		static Native.DiagnosticCB _diag;
+        static Native.DiagnosticCB _diag;
 
-		static LiftoffWindows()
-        {
-            _iok = () => OnInitialized?.Invoke();
-            _ifail = (code, msg) => OnInitializationFailed?.Invoke(code, msg);
+        static bool _callbacksInstalled;
 
-            _ldok = (placement) => OnAdLoaded?.Invoke(placement);
-            _ldfail = (placement, code, msg) => OnAdLoadFailed?.Invoke(placement, code, msg);
-
-            _start = (placement, eventId) => OnAdStart?.Invoke(placement, eventId);
-            _end = (placement) => OnAdEnd?.Invoke(placement);
-            _pfail = (placement, code, msg) => OnAdPlayFailed?.Invoke(placement, code, msg);
-            _rewarded = (placement) => OnAdRewarded?.Invoke(placement);
-            _click = (placement) => OnAdClick?.Invoke(placement);
-			_diag = (level, sender, msg) => OnDiagnostic?.Invoke(level, sender, msg);
-
-			var cbs = new Native.BridgeCallbacks {
-                initSuccess = _iok,
-                initFailure = _ifail,
-                loadSuccess  = _ldok,
-                loadFailure  = _ldfail,
-                adStart      = _start,
-                adEnd        = _end,
-                adPlayFailure= _pfail,
-                adRewarded   = _rewarded,
-                adClick      = _click
-            };
-            Native.Liftoff_SetCallbacks(cbs);
-			try
-			{
-				Native.Liftoff_SetDiagnosticCallback(_diag);
-			}
-			catch (System.DllNotFoundException e)
-			{
-				Debug.LogError("[Liftoff] Diagnostic hook failed (DLL missing): " + e);
-			}
-			catch (System.EntryPointNotFoundException e)
-			{
-				Debug.LogError("[Liftoff] Diagnostic hook failed (export missing): " + e);
-			}
-		}
-
-        public static bool Initialize(string appId, IntPtr hwnd) => Native.Liftoff_Initialize(appId, hwnd);
-        public static bool IsInitialized => Native.Liftoff_IsInitialized();
-        public static bool LoadAd(string placement) => Native.Liftoff_LoadAd(placement);
-        public static bool PlayAd(string placement) => Native.Liftoff_PlayAd(placement);
-        public static bool IsWebView2Available() => Native.Liftoff_IsWebView2Available();
-        public static void Shutdown()
-        {
-            try { Native.Liftoff_ClearDiagnosticCallback(); } catch { }
-            Native.Liftoff_Shutdown();
-        }
-
-#else
-        // ---------- Non-Windows platforms: Stubs ----------
         static LiftoffWindows()
         {
-            // nothing to wire
+            // Wire managed -> managed events
+            _iok = () => OnInitialized?.Invoke();
+            _ifail = (c, m) => OnInitializationFailed?.Invoke(c, m);
+            _ldok = p => OnAdLoaded?.Invoke(p);
+            _ldfail = (p, c, m) => OnAdLoadFailed?.Invoke(p, c, m);
+            _start = (p, eid) => OnAdStart?.Invoke(p, eid);
+            _end = p => OnAdEnd?.Invoke(p);
+            _pfail = (p, c, m) => OnAdPlayFailed?.Invoke(p, c, m);
+            _rewarded = p => OnAdRewarded?.Invoke(p);
+            _click = p => OnAdClick?.Invoke(p);
+
+            var cbs = new Native.BridgeCallbacks
+            {
+                initSuccess = _iok,
+                initFailure = _ifail,
+                loadSuccess = _ldok,
+                loadFailure = _ldfail,
+                adStart = _start,
+                adEnd = _end,
+                adPlayFailure = _pfail,
+                adRewarded = _rewarded,
+                adClick = _click
+            };
+
+            try
+            {
+                Native.Liftoff_SetCallbacks(cbs);
+                _callbacksInstalled = true;
+            }
+            catch (DllNotFoundException e) { Debug.LogError("[Liftoff] SetCallbacks DllNotFound: " + e.Message); }
+            catch (EntryPointNotFoundException e) { Debug.LogError("[Liftoff] SetCallbacks EntryPointNotFound: " + e.Message); }
+            catch (BadImageFormatException e) { Debug.LogError("[Liftoff] SetCallbacks BadImageFormat: " + e.Message); }
+            catch (Exception e) { Debug.LogError("[Liftoff] SetCallbacks unexpected: " + e); }
+
+            _diag = (level, sender, message) => OnDiagnostic?.Invoke(level, sender, message);
+
+            try { Native.Liftoff_SetDiagnosticCallback(_diag); }
+            catch (DllNotFoundException e) { Debug.LogError("[Liftoff] Diagnostic DllNotFound: " + e.Message); }
+            catch (EntryPointNotFoundException e) { Debug.LogError("[Liftoff] Diagnostic EntryPointNotFound: " + e.Message); }
+            catch (BadImageFormatException e) { Debug.LogError("[Liftoff] Diagnostic BadImageFormat: " + e.Message); }
+            catch (Exception e) { Debug.LogError("[Liftoff] Diagnostic unexpected: " + e); }
         }
+#endif // UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
 
         public static bool Initialize(string appId, IntPtr hwnd)
         {
-            Debug.LogWarning("[Liftoff] LiftoffWindows.Initialize called on non-Windows platform. This is a no-op.");
-            // simulate async success for editor play on non-Windows?
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            return Native.Liftoff_Initialize(appId, hwnd);
+#else
+            Debug.Log("[Liftoff] Initialize: non-Windows platform (no-op).");
             return false;
+#endif
         }
 
-        public static bool IsInitialized => false;
+        public static bool IsInitialized
+        {
+            get
+            {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+                return Native.Liftoff_IsInitialized();
+#else
+                return false;
+#endif
+            }
+        }
+
         public static bool LoadAd(string placement)
         {
-            Debug.LogWarning("[Liftoff] LoadAd called on non-Windows platform. No-op.");
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            return Native.Liftoff_LoadAd(placement);
+#else
+            Debug.Log("[Liftoff] LoadAd: non-Windows platform (no-op).");
             return false;
+#endif
         }
+
         public static bool PlayAd(string placement)
         {
-            Debug.LogWarning("[Liftoff] PlayAd called on non-Windows platform. No-op.");
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            return Native.Liftoff_PlayAd(placement);
+#else
+            Debug.Log("[Liftoff] PlayAd: non-Windows platform (no-op).");
             return false;
-        }
-        public static bool IsWebView2Available() => false;
-        public static void Shutdown() {}
 #endif
+        }
+
+        public static bool IsWebView2Available()
+        {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            return Native.Liftoff_IsWebView2Available();
+#else
+            return false;
+#endif
+        }
+
+        public static void Shutdown()
+        {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            try { Native.Liftoff_ClearDiagnosticCallback(); } catch { }
+
+            if (_callbacksInstalled)
+            {
+                try
+                {
+                    Native.BridgeCallbacks zero = default;
+                    Native.Liftoff_SetCallbacks(zero);
+                }
+                catch { /* ignore */ }
+                _callbacksInstalled = false;
+            }
+
+            try { Native.Liftoff_Shutdown(); } catch { }
+#else
+            // no-op elsewhere
+#endif
+        }
     }
 }
