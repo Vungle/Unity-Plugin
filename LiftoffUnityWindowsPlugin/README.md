@@ -8,9 +8,7 @@ This package contains:
 ## Build the Plugin DLL
 1. Open `plugin/LiftoffUnityBridge.sln` in Visual Studio 2022 (v143 toolset).
 2. Set **x64 / Release**.
-3. Adjust **Include Directories** and **Library Directories** to your Liftoff/Liftoff SDK path.
-4. If needed, add vendor `.lib` files to **Linker → Input**.
-5. Build → `LiftoffUnityBridge.dll` appears in `plugin/LiftoffUnityBridge/x64/Release/`.
+3. Build → `LiftoffUnityBridge.dll` appears in `plugin/x64/Release/`.
 
 Copy the DLL into `Assets/Plugins/x86_64/`.
 

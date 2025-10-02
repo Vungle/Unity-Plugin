@@ -35,19 +35,5 @@ namespace Liftoff.Windows
                 action();
             }
         }
-
-        /// <summary>
-        /// Run on main thread synchronously. Avoid calling this from the main thread itself
-        /// or you’ll deadlock; prefer Post() in most cases.
-        /// </summary>
-        public static void Send(Action action)
-        {
-            if (action == null) return;
-
-            if (IsMainThread) { action(); return; }
-            var ctx = _ctx;
-            if (ctx != null) ctx.Send(_ => action(), null);
-            else action();
-        }
     }
 }
