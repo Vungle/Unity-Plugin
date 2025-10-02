@@ -107,15 +107,15 @@ namespace Liftoff.Windows
         static LiftoffWindows()
         {
             // Wire managed -> managed events
-            _iok = () => OnInitialized?.Invoke();
-            _ifail = (c, m) => OnInitializationFailed?.Invoke(c, m);
-            _ldok = p => OnAdLoaded?.Invoke(p);
-            _ldfail = (p, c, m) => OnAdLoadFailed?.Invoke(p, c, m);
-            _start = (p, eid) => OnAdStart?.Invoke(p, eid);
-            _end = p => OnAdEnd?.Invoke(p);
-            _pfail = (p, c, m) => OnAdPlayFailed?.Invoke(p, c, m);
-            _rewarded = p => OnAdRewarded?.Invoke(p);
-            _click = p => OnAdClick?.Invoke(p);
+            _iok = () => LiftoffMainThread.Post(() => OnInitialized?.Invoke());
+            _ifail = (c, m) => LiftoffMainThread.Post(() => OnInitializationFailed?.Invoke(c, m));
+            _ldok = p => LiftoffMainThread.Post(() => OnAdLoaded?.Invoke(p));
+            _ldfail = (p, c, m) => LiftoffMainThread.Post(() => OnAdLoadFailed?.Invoke(p, c, m));
+            _start = (p, eid) => LiftoffMainThread.Post(() => OnAdStart?.Invoke(p, eid));
+            _end = p => LiftoffMainThread.Post(() => OnAdEnd?.Invoke(p));
+            _pfail = (p, c, m) => LiftoffMainThread.Post(() => OnAdPlayFailed?.Invoke(p, c, m));
+            _rewarded = p => LiftoffMainThread.Post(() => OnAdRewarded?.Invoke(p));
+            _click = p => LiftoffMainThread.Post(() => OnAdClick?.Invoke(p));
 
             var cbs = new Native.BridgeCallbacks
             {
@@ -140,7 +140,7 @@ namespace Liftoff.Windows
             catch (BadImageFormatException e) { Debug.LogError("[Liftoff] SetCallbacks BadImageFormat: " + e.Message); }
             catch (Exception e) { Debug.LogError("[Liftoff] SetCallbacks unexpected: " + e); }
 
-            _diag = (level, sender, message) => OnDiagnostic?.Invoke(level, sender, message);
+            _diag = (level, sender, message) => LiftoffMainThread.Post(() => OnDiagnostic?.Invoke(level, sender, message));
 
             try { Native.Liftoff_SetDiagnosticCallback(_diag); }
             catch (DllNotFoundException e) { Debug.LogError("[Liftoff] Diagnostic DllNotFound: " + e.Message); }

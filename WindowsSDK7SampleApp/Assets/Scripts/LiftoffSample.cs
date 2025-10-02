@@ -46,6 +46,7 @@ namespace Liftoff.Windows
         void LogUI(string msg)
         {
             Debug.Log(msg);
+            if (text != null) text.text = msg + "\n" + text.text;
         }
 
         public void OnInitClicked()
