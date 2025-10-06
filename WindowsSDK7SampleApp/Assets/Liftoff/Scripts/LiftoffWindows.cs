@@ -1,13 +1,12 @@
-// LiftoffWindows.cs (drop-in replacement)
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using AOT; // MonoPInvokeCallbackAttribute
 
 namespace Liftoff.Windows
 {
     public static class LiftoffWindows
     {
-        // Public events
         public static event Action OnInitialized;
         public static event Action<int, string> OnInitializationFailed;
         public static event Action<string> OnAdLoaded;
@@ -17,12 +16,11 @@ namespace Liftoff.Windows
         public static event Action<string, int, string> OnAdPlayFailed;
         public static event Action<string> OnAdRewarded;
         public static event Action<string> OnAdClick;
-        public static event Action<int, string, string> OnDiagnostic; // level, sender, message
+        public static event Action<int, string, string> OnDiagnostic;
 
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
         private static class Native
         {
-            // Callback delegates
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
             public delegate void InitSuccessCB();
             [UnmanagedFunctionPointer(CallingConvention.StdCall)]
@@ -61,7 +59,6 @@ namespace Liftoff.Windows
                 public AdClickCB adClick;
             }
 
-            // P/Invoke
             [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall)]
             public static extern void Liftoff_SetCallbacks(BridgeCallbacks cbs);
 
@@ -90,44 +87,74 @@ namespace Liftoff.Windows
             public static extern bool Liftoff_IsWebView2Available();
         }
 
-        // Keep delegates alive
-        static Native.InitSuccessCB _iok;
-        static Native.InitFailureCB _ifail;
-        static Native.AdLoadSuccessCB _ldok;
-        static Native.AdLoadFailureCB _ldfail;
-        static Native.AdStartCB _start;
-        static Native.AdEndCB _end;
-        static Native.AdPlayFailureCB _pfail;
-        static Native.AdRewardedCB _rewarded;
-        static Native.AdClickCB _click;
-        static Native.DiagnosticCB _diag;
+        // AOT-stable delegate instances to static methods
+        static readonly Native.InitSuccessCB _cbInitOk = InitOkTrampoline;
+        static readonly Native.InitFailureCB _cbInitFail = InitFailTrampoline;
+        static readonly Native.AdLoadSuccessCB _cbLoadOk = LoadOkTrampoline;
+        static readonly Native.AdLoadFailureCB _cbLoadFail = LoadFailTrampoline;
+        static readonly Native.AdStartCB _cbAdStart = AdStartTrampoline;
+        static readonly Native.AdEndCB _cbAdEnd = AdEndTrampoline;
+        static readonly Native.AdPlayFailureCB _cbAdPlayFail = AdPlayFailTrampoline;
+        static readonly Native.AdRewardedCB _cbRewarded = AdRewardedTrampoline;
+        static readonly Native.AdClickCB _cbClick = AdClickTrampoline;
+        static readonly Native.DiagnosticCB _cbDiag = DiagnosticTrampoline;
 
         static bool _callbacksInstalled;
 
+        // Trampolines — static, attributed, no captures
+        [MonoPInvokeCallback(typeof(Native.InitSuccessCB))]
+        static void InitOkTrampoline() =>
+            LiftoffMainThread.Post(() => OnInitialized?.Invoke());
+
+        [MonoPInvokeCallback(typeof(Native.InitFailureCB))]
+        static void InitFailTrampoline(int code, string message) =>
+            LiftoffMainThread.Post(() => OnInitializationFailed?.Invoke(code, message));
+
+        [MonoPInvokeCallback(typeof(Native.AdLoadSuccessCB))]
+        static void LoadOkTrampoline(string placement) =>
+            LiftoffMainThread.Post(() => OnAdLoaded?.Invoke(placement));
+
+        [MonoPInvokeCallback(typeof(Native.AdLoadFailureCB))]
+        static void LoadFailTrampoline(string placement, int code, string message) =>
+            LiftoffMainThread.Post(() => OnAdLoadFailed?.Invoke(placement, code, message));
+
+        [MonoPInvokeCallback(typeof(Native.AdStartCB))]
+        static void AdStartTrampoline(string placement, string eventId) =>
+            LiftoffMainThread.Post(() => OnAdStart?.Invoke(placement, eventId));
+
+        [MonoPInvokeCallback(typeof(Native.AdEndCB))]
+        static void AdEndTrampoline(string placement) =>
+            LiftoffMainThread.Post(() => OnAdEnd?.Invoke(placement));
+
+        [MonoPInvokeCallback(typeof(Native.AdPlayFailureCB))]
+        static void AdPlayFailTrampoline(string placement, int code, string message) =>
+            LiftoffMainThread.Post(() => OnAdPlayFailed?.Invoke(placement, code, message));
+
+        [MonoPInvokeCallback(typeof(Native.AdRewardedCB))]
+        static void AdRewardedTrampoline(string placement) =>
+            LiftoffMainThread.Post(() => OnAdRewarded?.Invoke(placement));
+
+        [MonoPInvokeCallback(typeof(Native.AdClickCB))]
+        static void AdClickTrampoline(string placement) =>
+            LiftoffMainThread.Post(() => OnAdClick?.Invoke(placement));
+
+        [MonoPInvokeCallback(typeof(Native.DiagnosticCB))]
+        static void DiagnosticTrampoline(int level, string senderType, string message) =>
+            LiftoffMainThread.Post(() => OnDiagnostic?.Invoke(level, senderType, message));
+
         static LiftoffWindows()
         {
-            // Wire managed -> managed events
-            _iok = () => LiftoffMainThread.Post(() => OnInitialized?.Invoke());
-            _ifail = (c, m) => LiftoffMainThread.Post(() => OnInitializationFailed?.Invoke(c, m));
-            _ldok = p => LiftoffMainThread.Post(() => OnAdLoaded?.Invoke(p));
-            _ldfail = (p, c, m) => LiftoffMainThread.Post(() => OnAdLoadFailed?.Invoke(p, c, m));
-            _start = (p, eid) => LiftoffMainThread.Post(() => OnAdStart?.Invoke(p, eid));
-            _end = p => LiftoffMainThread.Post(() => OnAdEnd?.Invoke(p));
-            _pfail = (p, c, m) => LiftoffMainThread.Post(() => OnAdPlayFailed?.Invoke(p, c, m));
-            _rewarded = p => LiftoffMainThread.Post(() => OnAdRewarded?.Invoke(p));
-            _click = p => LiftoffMainThread.Post(() => OnAdClick?.Invoke(p));
-
             var cbs = new Native.BridgeCallbacks
             {
-                initSuccess = _iok,
-                initFailure = _ifail,
-                loadSuccess = _ldok,
-                loadFailure = _ldfail,
-                adStart = _start,
-                adEnd = _end,
-                adPlayFailure = _pfail,
-                adRewarded = _rewarded,
-                adClick = _click
+                initSuccess = _cbInitOk,
+                initFailure = _cbInitFail,
+                loadSuccess = _cbLoadOk,
+                loadFailure = _cbLoadFail,
+                adStart = _cbAdStart,
+                adEnd = _cbAdEnd,
+                adPlayFailure = _cbAdPlayFail,
+                adRewarded = _cbRewarded,
+                adClick = _cbClick
             };
 
             try
@@ -140,9 +167,7 @@ namespace Liftoff.Windows
             catch (BadImageFormatException e) { Debug.LogError("[Liftoff] SetCallbacks BadImageFormat: " + e.Message); }
             catch (Exception e) { Debug.LogError("[Liftoff] SetCallbacks unexpected: " + e); }
 
-            _diag = (level, sender, message) => LiftoffMainThread.Post(() => OnDiagnostic?.Invoke(level, sender, message));
-
-            try { Native.Liftoff_SetDiagnosticCallback(_diag); }
+            try { Native.Liftoff_SetDiagnosticCallback(_cbDiag); }
             catch (DllNotFoundException e) { Debug.LogError("[Liftoff] Diagnostic DllNotFound: " + e.Message); }
             catch (EntryPointNotFoundException e) { Debug.LogError("[Liftoff] Diagnostic EntryPointNotFound: " + e.Message); }
             catch (BadImageFormatException e) { Debug.LogError("[Liftoff] Diagnostic BadImageFormat: " + e.Message); }

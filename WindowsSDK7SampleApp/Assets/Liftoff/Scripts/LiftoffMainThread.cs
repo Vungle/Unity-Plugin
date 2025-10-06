@@ -6,34 +6,24 @@ namespace Liftoff.Windows
 {
     public static class LiftoffMainThread
     {
-        static SynchronizationContext _ctx;
-        static int _mainThreadId;
+        static System.Threading.SynchronizationContext _ctx;
+        static int _mainId;
 
         public static bool IsMainThread =>
-            Thread.CurrentThread.ManagedThreadId == _mainThreadId;
+            System.Threading.Thread.CurrentThread.ManagedThreadId == _mainId;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Boot()
         {
-            // Runs on the Unity main thread when you press Play.
-            _ctx = SynchronizationContext.Current;  // UnitySynchronizationContext
-            _mainThreadId = Thread.CurrentThread.ManagedThreadId;
+            _ctx = System.Threading.SynchronizationContext.Current;
+            _mainId = System.Threading.Thread.CurrentThread.ManagedThreadId;
         }
 
-        /// <summary>Queue work to run on the Unity main thread (next frame).</summary>
-        public static void Post(Action action)
+        public static void Post(Action a)
         {
-            if (action == null) return;
-
-            if (IsMainThread) { action(); return; }      // already on main thread
-            var ctx = _ctx;                               // local copy for thread-safety
-            if (ctx != null) ctx.Post(_ => action(), null);
-            else
-            {
-                // Fallback: if called very early before Boot(), just run inline.
-                // (Boot() will run before any scene content executes.)
-                action();
-            }
+            if (a == null) return;
+            if (IsMainThread) { a(); return; }
+            var ctx = _ctx; if (ctx != null) ctx.Post(_ => a(), null); else a();
         }
     }
 }
