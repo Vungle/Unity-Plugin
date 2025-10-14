@@ -50,7 +50,7 @@ struct BridgeCallbacks {
 
 // ---- API exported to C# ----
 LIFTOFF_API void  __stdcall Liftoff_SetCallbacks(BridgeCallbacks cbs);
-LIFTOFF_API bool  __stdcall Liftoff_Initialize(const wchar_t* appId, void* hwnd);
+LIFTOFF_API bool  __stdcall Liftoff_Initialize(const wchar_t* appId, void* hwnd, bool disableAshwidTracking);
 LIFTOFF_API bool  __stdcall Liftoff_IsInitialized();
 LIFTOFF_API bool  __stdcall Liftoff_LoadAd(const wchar_t* placement);
 LIFTOFF_API bool  __stdcall Liftoff_PlayAd(const wchar_t* placement);

@@ -70,7 +70,7 @@ namespace Liftoff.Windows
 
             [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
             [return: MarshalAs(UnmanagedType.I1)]
-            public static extern bool Liftoff_Initialize(string appId, IntPtr hwnd);
+            public static extern bool Liftoff_Initialize(string appId, IntPtr hwnd, [MarshalAs(UnmanagedType.I1)] bool disableAshwidTracking);
 
             [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall)]
             [return: MarshalAs(UnmanagedType.I1)]
@@ -192,13 +192,13 @@ namespace Liftoff.Windows
         }
 #endif // UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
 
-        public static bool Initialize(string appId, IntPtr hwnd)
+        public static void Initialize(string appId, IntPtr hwnd, bool disableAshwidTracking = false)
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-            return Native.Liftoff_Initialize(appId, hwnd);
+            bool initialReply = Native.Liftoff_Initialize(appId, hwnd, disableAshwidTracking);
+            Debug.LogFormat("Liftoff Initialization called with result {0}", initialReply);
 #else
             Debug.Log("[Liftoff] Initialize: non-Windows platform (no-op).");
-            return false;
 #endif
         }
 
@@ -214,23 +214,23 @@ namespace Liftoff.Windows
             }
         }
 
-        public static bool LoadAd(string placement)
+        public static void LoadAd(string placement)
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-            return Native.Liftoff_LoadAd(placement);
+            bool initialReply = Native.Liftoff_LoadAd(placement);
+            Debug.LogFormat("Liftoff LoadAd called with result {0}", initialReply);
 #else
             Debug.Log("[Liftoff] LoadAd: non-Windows platform (no-op).");
-            return false;
 #endif
         }
 
-        public static bool PlayAd(string placement)
+        public static void PlayAd(string placement)
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-            return Native.Liftoff_PlayAd(placement);
+            bool initialReply = Native.Liftoff_PlayAd(placement);
+            Debug.LogFormat("Liftoff PlayAd called with result {0}", initialReply);
 #else
             Debug.Log("[Liftoff] PlayAd: non-Windows platform (no-op).");
-            return false;
 #endif
         }
 

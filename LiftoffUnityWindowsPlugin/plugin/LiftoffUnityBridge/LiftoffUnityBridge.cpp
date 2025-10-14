@@ -111,7 +111,7 @@ LIFTOFF_API void __stdcall Liftoff_SetCallbacks(BridgeCallbacks cbs) {
     g_cbs = cbs;
 }
 
-LIFTOFF_API bool __stdcall Liftoff_Initialize(const wchar_t* appIdW, void* hwnd) {
+LIFTOFF_API bool __stdcall Liftoff_Initialize(const wchar_t* appIdW, void* hwnd, bool disableAshwidTracking) {
     if (g_initSuccessSignaled.load(std::memory_order_acquire) &&
         g_sdkInstance.load(std::memory_order_acquire)) {
         return true;
@@ -126,6 +126,7 @@ LIFTOFF_API bool __stdcall Liftoff_Initialize(const wchar_t* appIdW, void* hwnd)
         }
 
         LiftoffSdkConfig config;
+        config.DisableAshwidTracking = disableAshwidTracking;
 
         // Persist initialization callback object
         g_initCb = std::make_shared<InitializationCallback>();
@@ -136,9 +137,7 @@ LIFTOFF_API bool __stdcall Liftoff_Initialize(const wchar_t* appIdW, void* hwnd)
             };
         g_initCb->OnInitializationFailure = [](const InitializationFailureEventArgs& /*args*/) {
             if (g_cbs.initFailure) {
-                int code = 0;
-                std::wstring msg = L"Initialization Failed";
-                g_cbs.initFailure(code, msg.c_str());
+                if (g_cbs.initFailure) g_cbs.initFailure(0, L"Initialization Failed");
             }
             NativeLogW(4, L"Init", L"Initialization failed.");
             };

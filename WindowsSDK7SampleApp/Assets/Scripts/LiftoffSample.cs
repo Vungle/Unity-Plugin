@@ -59,8 +59,8 @@ namespace Liftoff.Windows
             if (hwnd == IntPtr.Zero) try { hwnd = FindWindow("UnityWndClass", null); } catch {}
             LogUI($"[Liftoff] Initialize with HWND=0x{hwnd.ToInt64():X} (0 means hidden host will be used).");
 
-            bool ok = LiftoffWindows.Initialize(appId, hwnd);
-            LogUI($"[Liftoff] Initialize returned {ok}. WebView2 available: {LiftoffWindows.IsWebView2Available()}");
+            LiftoffWindows.Initialize(appId, hwnd, true);
+            LogUI($"[Liftoff] Initialize called. WebView2 available: {LiftoffWindows.IsWebView2Available()}");
 #else
             LogUI("[Liftoff] Initialize: non-Windows platform.");
 #endif
@@ -69,8 +69,8 @@ namespace Liftoff.Windows
         public void OnLoadClicked()
         {
             if (text != null) text.text = string.Empty;
-            bool ok = LiftoffWindows.LoadAd(placement);
-            LogUI($"[Liftoff] LoadAd('{placement}') returned {ok}");
+            LiftoffWindows.LoadAd(placement);
+            LogUI($"[Liftoff] LoadAd('{placement}') called");
         }
 
         public void OnPlayClicked()
@@ -81,8 +81,8 @@ namespace Liftoff.Windows
         IEnumerator PlayNextFrame()
         {
             yield return null; // next frame on main thread
-            bool ok = LiftoffWindows.PlayAd(placement);
-            LogUI($"[Liftoff] PlayAd('{placement}') returned {ok}");
+            LiftoffWindows.PlayAd(placement);
+            LogUI($"[Liftoff] PlayAd('{placement}') called");
         }
 
         void OnApplicationQuit()
