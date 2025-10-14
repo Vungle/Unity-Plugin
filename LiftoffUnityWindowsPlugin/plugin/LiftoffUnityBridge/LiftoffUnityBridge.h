@@ -60,3 +60,8 @@ LIFTOFF_API bool  __stdcall Liftoff_IsWebView2Available(); // optional helper
 // Diagnostics control
 LIFTOFF_API void __stdcall Liftoff_SetDiagnosticCallback(DiagnosticCB cb);
 LIFTOFF_API void __stdcall Liftoff_ClearDiagnosticCallback();
+
+// Privacy / consent
+LIFTOFF_API void __stdcall Liftoff_SetCoppaStatus(bool status);
+LIFTOFF_API void __stdcall Liftoff_SetCcpaStatus(int status);
+LIFTOFF_API void __stdcall Liftoff_SetGdprConsentStatus(int status, const wchar_t* version);

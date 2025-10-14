@@ -69,22 +69,39 @@ namespace Liftoff.Windows
             public static extern void Liftoff_ClearDiagnosticCallback();
 
             [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.I1)]
             public static extern bool Liftoff_Initialize(string appId, IntPtr hwnd);
 
             [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall)]
+            [return: MarshalAs(UnmanagedType.I1)]
             public static extern bool Liftoff_IsInitialized();
 
             [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.I1)]
             public static extern bool Liftoff_LoadAd(string placement);
 
             [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.I1)]
             public static extern bool Liftoff_PlayAd(string placement);
+
+            [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall)]
+            [return: MarshalAs(UnmanagedType.I1)]
+            public static extern bool Liftoff_IsWebView2Available();
 
             [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall)]
             public static extern void Liftoff_Shutdown();
 
+            // COPPA
             [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall)]
-            public static extern bool Liftoff_IsWebView2Available();
+            public static extern void Liftoff_SetCoppaStatus([MarshalAs(UnmanagedType.I1)] bool status);
+
+            // CCPA
+            [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall)]
+            public static extern void Liftoff_SetCcpaStatus(int status);
+
+            // GDPR
+            [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+            public static extern void Liftoff_SetGdprConsentStatus(int status, string version);
         }
 
         // AOT-stable delegate instances to static methods
@@ -245,6 +262,30 @@ namespace Liftoff.Windows
             try { Native.Liftoff_Shutdown(); } catch { }
 #else
             // no-op elsewhere
+#endif
+        }
+
+        // COPPA
+        public static void SetCoppaStatus(bool isUserCoppa)
+        {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            Native.Liftoff_SetCoppaStatus(isUserCoppa);
+#endif
+        }
+
+        // CCPA
+        public static void SetCcpaStatus(bool optIn)
+        {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            Native.Liftoff_SetCcpaStatus(optIn ? 1 : 2);
+#endif
+        }
+
+        // GDPR
+        public static void SetGdprConsentStatus(bool optIn, string messageVersion = "")
+        {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            Native.Liftoff_SetGdprConsentStatus(optIn ? 1 : 2, messageVersion ?? string.Empty);
 #endif
         }
     }

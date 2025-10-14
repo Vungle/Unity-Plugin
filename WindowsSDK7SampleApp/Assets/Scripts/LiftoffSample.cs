@@ -68,6 +68,7 @@ namespace Liftoff.Windows
 
         public void OnLoadClicked()
         {
+            if (text != null) text.text = string.Empty;
             bool ok = LiftoffWindows.LoadAd(placement);
             LogUI($"[Liftoff] LoadAd('{placement}') returned {ok}");
         }

@@ -396,3 +396,26 @@ LIFTOFF_API void __stdcall Liftoff_ClearDiagnosticCallback()
     g_diagForwarder = nullptr;
     g_diagCb = nullptr;
 }
+
+// COPPA
+LIFTOFF_API void __stdcall Liftoff_SetCoppaStatus(bool status) {
+    try { LiftoffAds::SetCoppaStatus(status); }
+    catch (...) { NativeLogW(3, L"Privacy", L"SetCoppaStatus exception"); }
+}
+
+// CCPA
+LIFTOFF_API void __stdcall Liftoff_SetCcpaStatus(int status) {
+    try { LiftoffAds::SetCcpaStatus(static_cast<CcpaConsentStatus>(status)); }
+    catch (...) { NativeLogW(3, L"Privacy", L"SetCcpaStatus exception"); }
+}
+
+// GDPR
+LIFTOFF_API void __stdcall Liftoff_SetGdprConsentStatus(int status, const wchar_t* versionW) {
+    try {
+        std::string version = WToUtf8(std::wstring(versionW ? versionW : L""));
+        LiftoffAds::SetGdprConsentStatus(static_cast<GdprConsentStatus>(status), version);
+    }
+    catch (...) {
+        NativeLogW(3, L"Privacy", L"SetGdprConsentStatus exception");
+    }
+}

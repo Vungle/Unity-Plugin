@@ -77,4 +77,27 @@ public:
    static void SetGdprConsentStatus(GdprConsentStatus status, const std::string& version);
    static std::string GetGdprConsentMessageVersion();
    static void ResetGdprConsentStatusToUnknown();
+
+   // Mediation: get a mediation super token v4 for a given placement.
+   std::string GetMediationSuperToken(const std::string& targetPlacement);
+   bool LoadMediatedAd(const std::string& placement, const AdLoadCallback callback, 
+       const std::string& headerBiddingMarkup);
+
+
+   // New: Play a mediated ad synchronously. Verifies placement is header-bidding and then plays.
+   // Returns LiftoffAdPlayInfo.
+   LiftoffAdPlayInfo PlayMediatedAd(
+       const AdConfig& config,
+       const std::string& placement,
+       const AdPlayCallback& callbacks,
+       const std::string& headerBiddingMarkup
+       );
+
+private:
+    // C++ equivalent of PlayAdInternal from C#
+    static LiftoffAdPlayInfo PlayAdInternal(
+        const AdConfig& adConfig,
+        const std::string& placement,
+        const AdPlayCallback& callbacks,
+        const std::string& headerBiddingMarkup = "");
 };
