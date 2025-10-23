@@ -329,6 +329,122 @@ LIFTOFF_API void __stdcall Liftoff_Shutdown() {
     NativeLogW(2, L"Shutdown", L"SDK state and callbacks cleared.");
 }
 
+LIFTOFF_API bool __stdcall Liftoff_LoadAd_WithMarkup(const wchar_t* placementW,
+    const wchar_t* headerBiddingMarkupW)
+{
+    LiftoffAds* inst = g_sdkInstance.load(std::memory_order_acquire);
+    if (!inst) {
+        if (g_cbs.loadFailure)
+            g_cbs.loadFailure(L"", -2, L"SDK instance not ready. Wait for OnInitialized before LoadAd.");
+        NativeLogW(3, L"LoadAd", L"Called before instance was ready (mediated).");
+        return false;
+    }
+
+    try {
+        std::wstring placementWStr = std::wstring(placementW ? placementW : L"");
+        std::wstring markupWStr = std::wstring(headerBiddingMarkupW ? headerBiddingMarkupW : L"");
+
+        const std::string placement = WToUtf8(placementWStr);
+        const std::string markup = WToUtf8(markupWStr);
+
+        auto cb = std::make_shared<AdLoadCallback>();
+        cb->OnAdLoadSuccess = [cb](AdLoadEventArgs args) {
+            if (g_cbs.loadSuccess) g_cbs.loadSuccess(Utf8ToW(args.Placement).c_str());
+            NativeLogW(2, L"LoadAd", L"Mediated load success.");
+            };
+        cb->OnAdLoadFailure = [cb](AdLoadEventArgs args) {
+            if (g_cbs.loadFailure) g_cbs.loadFailure(Utf8ToW(args.Placement).c_str(), 0, L"Load failed");
+            NativeLogW(3, L"LoadAd", L"Mediated load failed (async).");
+            };
+
+        // Use mediated API
+        bool kicked = inst->LoadMediatedAd(placement, *cb, markup);
+        if (!kicked && g_cbs.loadFailure) {
+            g_cbs.loadFailure(placementWStr.c_str(), -3, L"LoadMediatedAd returned false");
+            NativeLogW(3, L"LoadAd", L"Mediated: LoadMediatedAd returned false.");
+        }
+        else {
+            NativeLogW(2, L"LoadAd", L"Mediated: request issued.");
+        }
+        return kicked;
+    }
+    catch (const std::exception& ex) {
+        if (g_cbs.loadFailure) g_cbs.loadFailure(L"", -1, Utf8ToW(ex.what()).c_str());
+        NativeLogW(4, L"LoadAd", L"Exception during LoadMediatedAd.");
+        return false;
+    }
+    catch (...) {
+        if (g_cbs.loadFailure) g_cbs.loadFailure(L"", -1, L"Exception during LoadMediatedAd");
+        NativeLogW(4, L"LoadAd", L"Unknown exception during LoadMediatedAd.");
+        return false;
+    }
+}
+
+LIFTOFF_API bool __stdcall Liftoff_PlayAd_WithMarkup(const wchar_t* placementW,
+    const wchar_t* headerBiddingMarkupW)
+{
+    LiftoffAds* inst = g_sdkInstance.load(std::memory_order_acquire);
+    if (!inst) {
+        if (g_cbs.adPlayFailure)
+            g_cbs.adPlayFailure(L"", -2, L"SDK instance not ready. Wait for OnInitialized before PlayAd.");
+        NativeLogW(3, L"PlayAd", L"Called before instance was ready (mediated).");
+        return false;
+    }
+
+    try {
+        std::wstring placementWStr = std::wstring(placementW ? placementW : L"");
+        std::wstring markupWStr = std::wstring(headerBiddingMarkupW ? headerBiddingMarkupW : L"");
+
+        const std::string placement = WToUtf8(placementWStr);
+        const std::string markup = WToUtf8(markupWStr);
+
+        auto pcb = std::make_shared<AdPlayCallback>();
+        pcb->OnAdStart = [pcb](AdPlayEventArgs args) {
+            if (g_cbs.adStart) g_cbs.adStart(Utf8ToW(args.Placement).c_str(), Utf8ToW(args.EventID).c_str());
+            NativeLogW(2, L"PlayAd", L"Mediated ad started.");
+            };
+        pcb->OnAdEnd = [pcb](AdPlayEventArgs args) {
+            if (g_cbs.adEnd) g_cbs.adEnd(Utf8ToW(args.Placement).c_str());
+            NativeLogW(2, L"PlayAd", L"Mediated ad ended.");
+            };
+        pcb->OnAdPlayFailure = [pcb](AdPlayEventArgs args) {
+            if (g_cbs.adPlayFailure) g_cbs.adPlayFailure(Utf8ToW(args.Placement).c_str(), 0, L"Play failed");
+            NativeLogW(3, L"PlayAd", L"Mediated play failed (async).");
+            };
+        pcb->OnAdPlayRewarded = [pcb](AdPlayEventArgs args) {
+            if (g_cbs.adRewarded) g_cbs.adRewarded(Utf8ToW(args.Placement).c_str());
+            NativeLogW(2, L"PlayAd", L"Mediated rewarded.");
+            };
+        pcb->OnAdPlayClick = [pcb](AdPlayEventArgs args) {
+            if (g_cbs.adClick) g_cbs.adClick(Utf8ToW(args.Placement).c_str());
+            NativeLogW(2, L"PlayAd", L"Mediated clicked.");
+            };
+
+        LiftoffAdPlayInfo info = inst->PlayMediatedAd(AdConfig(), placement, *pcb, markup);
+        if (!info.Success) {
+            std::wstring wmsg = Utf8ToW(info.ErrorMessage);
+            std::wstring wplacement = Utf8ToW(info.Placement);
+            if (g_cbs.adPlayFailure)
+                g_cbs.adPlayFailure(wplacement.c_str(), -3, wmsg.empty() ? L"PlayMediatedAd refused" : wmsg.c_str());
+            NativeLogW(3, L"PlayAd", wmsg.empty() ? L"Mediated: Play failed." : wmsg.c_str());
+            return false;
+        }
+
+        NativeLogW(2, L"PlayAd", L"Mediated: request accepted.");
+        return true;
+    }
+    catch (const std::exception& ex) {
+        if (g_cbs.adPlayFailure) g_cbs.adPlayFailure(L"", -1, Utf8ToW(ex.what()).c_str());
+        NativeLogW(4, L"PlayAd", L"Exception during PlayMediatedAd.");
+        return false;
+    }
+    catch (...) {
+        if (g_cbs.adPlayFailure) g_cbs.adPlayFailure(L"", -1, L"Exception during PlayMediatedAd");
+        NativeLogW(4, L"PlayAd", L"Unknown exception during PlayMediatedAd.");
+        return false;
+    }
+}
+
 // ---- WebView2: availability + version logging (no Unity API surface) ----
 LIFTOFF_API bool __stdcall Liftoff_IsWebView2Available() {
     typedef HRESULT(WINAPI* GetVerFn)(PCWSTR, LPWSTR*);

@@ -91,6 +91,15 @@ namespace Liftoff.Windows
             [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall)]
             public static extern void Liftoff_Shutdown();
 
+            // Mediated/header-bidding variants
+            [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.I1)]
+            internal static extern bool Liftoff_LoadAd_WithMarkup(string placement, string headerBiddingMarkup);
+
+            [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.I1)]
+            internal static extern bool Liftoff_PlayAd_WithMarkup(string placement, string headerBiddingMarkup);
+
             // COPPA
             [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall)]
             public static extern void Liftoff_SetCoppaStatus([MarshalAs(UnmanagedType.I1)] bool status);
@@ -214,21 +223,33 @@ namespace Liftoff.Windows
             }
         }
 
-        public static void LoadAd(string placement)
+        public static void LoadAd(string placement, string biddingMarkup = null)
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-            bool initialReply = Native.Liftoff_LoadAd(placement);
-            Debug.LogFormat("Liftoff LoadAd called with result {0}", initialReply);
+            if (string.IsNullOrEmpty(biddingMarkup))
+            {
+                bool waterfallReply = Native.Liftoff_LoadAd(placement);
+                Debug.LogFormat("Liftoff LoadAd called with result {0}", waterfallReply);
+                return;
+            }
+            bool biddingReply = Native.Liftoff_LoadAd_WithMarkup(placement, biddingMarkup);
+            Debug.LogFormat("Liftoff Bidding LoadAd called with result {0}", biddingReply);
 #else
             Debug.Log("[Liftoff] LoadAd: non-Windows platform (no-op).");
 #endif
         }
 
-        public static void PlayAd(string placement)
+        public static void PlayAd(string placement, string biddingMarkup = null)
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-            bool initialReply = Native.Liftoff_PlayAd(placement);
-            Debug.LogFormat("Liftoff PlayAd called with result {0}", initialReply);
+            if (string.IsNullOrEmpty(biddingMarkup))
+            {
+                bool waterfallReply = Native.Liftoff_PlayAd(placement);
+                Debug.LogFormat("Liftoff PlayAd called with result {0}", waterfallReply);
+                return;
+            }
+            bool biddingReply = Native.Liftoff_PlayAd_WithMarkup(placement, biddingMarkup);
+            Debug.LogFormat("Liftoff Bidding PlayAd called with result {0}", biddingReply);
 #else
             Debug.Log("[Liftoff] PlayAd: non-Windows platform (no-op).");
 #endif

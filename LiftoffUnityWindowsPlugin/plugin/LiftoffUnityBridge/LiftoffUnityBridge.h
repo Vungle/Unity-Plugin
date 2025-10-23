@@ -57,6 +57,12 @@ LIFTOFF_API bool  __stdcall Liftoff_PlayAd(const wchar_t* placement);
 LIFTOFF_API void  __stdcall Liftoff_Shutdown();
 LIFTOFF_API bool  __stdcall Liftoff_IsWebView2Available(); // optional helper
 
+// Mediated/header-bidding variants
+LIFTOFF_API bool __stdcall Liftoff_LoadAd_WithMarkup(const wchar_t* placementW,
+    const wchar_t* headerBiddingMarkupW);
+LIFTOFF_API bool __stdcall Liftoff_PlayAd_WithMarkup(const wchar_t* placementW,
+    const wchar_t* headerBiddingMarkupW);
+
 // Diagnostics control
 LIFTOFF_API void __stdcall Liftoff_SetDiagnosticCallback(DiagnosticCB cb);
 LIFTOFF_API void __stdcall Liftoff_ClearDiagnosticCallback();
