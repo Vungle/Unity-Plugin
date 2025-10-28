@@ -1,7 +1,4 @@
 .DS_Store
-*.csproj
 
-Sample/Unity\ Sample\ Application/Assets/Vungle.meta
-Sample/Unity\ Sample\ Application/Assets/Vungle/
-Sample/Unity Sample Application/Assets/CharlesProxy.meta
-Sample/Unity\ Sample\ Application/Assets/CharlesProxy/
+!Packages/com.liftoff.windows-ads/Samples~/
+!Packages/com.liftoff.windows-ads/Samples~/**
