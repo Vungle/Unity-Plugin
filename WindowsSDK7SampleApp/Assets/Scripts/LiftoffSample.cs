@@ -59,7 +59,7 @@ namespace Liftoff.Windows
             if (hwnd == IntPtr.Zero) try { hwnd = FindWindow("UnityWndClass", null); } catch {}
             LogUI($"[Liftoff] Initialize with HWND=0x{hwnd.ToInt64():X} (0 means hidden host will be used).");
 
-            LiftoffWindows.Initialize(appId, hwnd, true);
+            LiftoffWindows.Initialize(appId, hwnd);
             LogUI($"[Liftoff] Initialize called. WebView2 available: {LiftoffWindows.IsWebView2Available()}");
 #else
             LogUI("[Liftoff] Initialize: non-Windows platform.");

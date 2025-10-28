@@ -78,6 +78,9 @@ public:
    static std::string GetGdprConsentMessageVersion();
    static void ResetGdprConsentStatusToUnknown();
 
+   static void SetDisableAshwidTracking(bool disabled);
+   static bool GetDisableASHWID();
+
    // Mediation: get a mediation super token v4 for a given placement.
    std::string GetMediationSuperToken(const std::string& targetPlacement);
    bool LoadMediatedAd(const std::string& placement, const AdLoadCallback callback, 

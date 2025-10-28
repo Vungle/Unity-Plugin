@@ -10,9 +10,6 @@ public:
     // Gets or sets api endpoint URL
     std::string ApiEndpoint;
 
-    // The "ashwid" is the Application Specific Hardware ID
-    bool DisableAshwidTracking = false;
-
     void SetCoppaStatus(bool consent) {
         CoppaStatusValue = consent;
         HasCoppaStatus = true;
@@ -23,6 +20,10 @@ public:
         HasCcpaConsentStatus = true;
 	}
 
+    void SetDisableAshwidTracking(bool disabled) {
+        DisableAshwidTracking = disabled;
+        HasDisableAshwidTracking = true;
+    }
 
 private:
     // Setting CoppaStatus to true will prevent the SDK from collecting any data on the user
@@ -34,4 +35,6 @@ private:
     CcpaConsentStatus CcpaConsentStatusValue = CcpaConsentStatus::OptedIn; // Ensure CcpaConsentStatus is defined
     bool HasCcpaConsentStatus = false;
 
+    bool DisableAshwidTracking = false;
+	bool HasDisableAshwidTracking = false;
 };

@@ -70,7 +70,7 @@ namespace Liftoff.Windows
 
             [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
             [return: MarshalAs(UnmanagedType.I1)]
-            public static extern bool Liftoff_Initialize(string appId, IntPtr hwnd, [MarshalAs(UnmanagedType.I1)] bool disableAshwidTracking);
+            public static extern bool Liftoff_Initialize(string appId, IntPtr hwnd);
 
             [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall)]
             [return: MarshalAs(UnmanagedType.I1)]
@@ -111,6 +111,9 @@ namespace Liftoff.Windows
             // GDPR
             [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
             public static extern void Liftoff_SetGdprConsentStatus(int status, string version);
+
+            [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall)]
+            internal static extern void Liftoff_SetDisableAshwidTracking([MarshalAs(UnmanagedType.I1)] bool disabled);
         }
 
         // AOT-stable delegate instances to static methods
@@ -201,10 +204,10 @@ namespace Liftoff.Windows
         }
 #endif // UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
 
-        public static void Initialize(string appId, IntPtr hwnd, bool disableAshwidTracking = false)
+        public static void Initialize(string appId, IntPtr hwnd)
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-            bool initialReply = Native.Liftoff_Initialize(appId, hwnd, disableAshwidTracking);
+            bool initialReply = Native.Liftoff_Initialize(appId, hwnd);
             Debug.LogFormat("Liftoff Initialization called with result {0}", initialReply);
 #else
             Debug.Log("[Liftoff] Initialize: non-Windows platform (no-op).");
@@ -226,7 +229,7 @@ namespace Liftoff.Windows
         public static void LoadAd(string placement, string biddingMarkup = null)
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-            if (string.IsNullOrEmpty(biddingMarkup))
+            if (string.IsNullOrWhiteSpace(biddingMarkup))
             {
                 bool waterfallReply = Native.Liftoff_LoadAd(placement);
                 Debug.LogFormat("Liftoff LoadAd called with result {0}", waterfallReply);
@@ -242,7 +245,7 @@ namespace Liftoff.Windows
         public static void PlayAd(string placement, string biddingMarkup = null)
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-            if (string.IsNullOrEmpty(biddingMarkup))
+            if (string.IsNullOrWhiteSpace(biddingMarkup))
             {
                 bool waterfallReply = Native.Liftoff_PlayAd(placement);
                 Debug.LogFormat("Liftoff PlayAd called with result {0}", waterfallReply);
@@ -307,6 +310,14 @@ namespace Liftoff.Windows
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
             Native.Liftoff_SetGdprConsentStatus(optIn ? 1 : 2, messageVersion ?? string.Empty);
+#endif
+        }
+
+        // ASHWID
+        public static void SetDisableAshwidTracking(bool disabled)
+        {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            Native.Liftoff_SetDisableAshwidTracking(disabled);
 #endif
         }
     }

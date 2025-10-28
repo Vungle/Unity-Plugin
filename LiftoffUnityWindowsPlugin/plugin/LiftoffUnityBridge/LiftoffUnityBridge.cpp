@@ -111,7 +111,7 @@ LIFTOFF_API void __stdcall Liftoff_SetCallbacks(BridgeCallbacks cbs) {
     g_cbs = cbs;
 }
 
-LIFTOFF_API bool __stdcall Liftoff_Initialize(const wchar_t* appIdW, void* hwnd, bool disableAshwidTracking) {
+LIFTOFF_API bool __stdcall Liftoff_Initialize(const wchar_t* appIdW, void* hwnd) {
     if (g_initSuccessSignaled.load(std::memory_order_acquire) &&
         g_sdkInstance.load(std::memory_order_acquire)) {
         return true;
@@ -125,8 +125,6 @@ LIFTOFF_API bool __stdcall Liftoff_Initialize(const wchar_t* appIdW, void* hwnd,
             NativeLogW(1, L"Init", L"No valid HWND passed; using hidden host window.");
         }
 
-        LiftoffSdkConfig config;
-        config.DisableAshwidTracking = disableAshwidTracking;
 
         // Persist initialization callback object
         g_initCb = std::make_shared<InitializationCallback>();
@@ -136,14 +134,12 @@ LIFTOFF_API bool __stdcall Liftoff_Initialize(const wchar_t* appIdW, void* hwnd,
             SignalInitSuccessIfReady();
             };
         g_initCb->OnInitializationFailure = [](const InitializationFailureEventArgs& /*args*/) {
-            if (g_cbs.initFailure) {
-                if (g_cbs.initFailure) g_cbs.initFailure(0, L"Initialization Failed");
-            }
+            if (g_cbs.initFailure) g_cbs.initFailure(0, L"Initialization Failed");
             NativeLogW(4, L"Init", L"Initialization failed.");
             };
 
         // Kick off async init (non-blocking)
-        auto fut = LiftoffAds::InitializeAsync(appId, config, hWnd, *g_initCb);
+        auto fut = LiftoffAds::InitializeAsync(appId, hWnd, *g_initCb);
 
         // Resolve the future on a worker thread; some SDK builds only provide the instance here
         std::thread([f = std::move(fut)]() mutable {
@@ -532,5 +528,18 @@ LIFTOFF_API void __stdcall Liftoff_SetGdprConsentStatus(int status, const wchar_
     }
     catch (...) {
         NativeLogW(3, L"Privacy", L"SetGdprConsentStatus exception");
+    }
+}
+
+LIFTOFF_API void __stdcall Liftoff_SetDisableAshwidTracking(bool disabled)
+{
+    try {
+        LiftoffAds::SetDisableAshwidTracking(disabled); // SDK static call
+        NativeLogW(2, L"Init", disabled
+            ? L"ASHWID tracking disabled (via static setter)."
+            : L"ASHWID tracking enabled (via static setter).");
+    }
+    catch (...) {
+        NativeLogW(3, L"Init", L"SetDisableAshwidTracking exception");
     }
 }
