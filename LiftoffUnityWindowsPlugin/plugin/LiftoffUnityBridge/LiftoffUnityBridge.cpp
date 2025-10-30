@@ -75,15 +75,6 @@ static std::wstring Utf8ToW(const std::string& s) {
     return out;
 }
 
-// --------- Small native logger ----------
-static void NativeLogW(int level/*0..5*/, const wchar_t* sender, const wchar_t* msg) {
-    OutputDebugStringW(L"[Liftoff] ");
-    if (sender && *sender) { OutputDebugStringW(sender); OutputDebugStringW(L": "); }
-    OutputDebugStringW(msg ? msg : L"(null)");
-    OutputDebugStringW(L"\n");
-    if (g_diagCb) g_diagCb(level, sender ? sender : L"Liftoff", msg ? msg : L"");
-}
-
 static void RegisterDiagnosticsIfNeeded();
 
 // --------- Init success signaling ----------
@@ -92,7 +83,6 @@ static void SignalInitSuccessIfReady() {
     if (inst && !g_initSuccessSignaled.exchange(true, std::memory_order_acq_rel)) {
         RegisterDiagnosticsIfNeeded();  // <-- register diag after instance exists
         if (g_cbs.initSuccess) g_cbs.initSuccess();
-        NativeLogW(2, L"Init", L"Initialization complete (instance ready).");
     }
 }
 
@@ -122,20 +112,18 @@ LIFTOFF_API bool __stdcall Liftoff_Initialize(const wchar_t* appIdW, void* hwnd)
         HWND hWnd = static_cast<HWND>(hwnd);
         if (!hWnd || !IsWindow(hWnd)) {
             hWnd = EnsureHostWindow();
-            NativeLogW(1, L"Init", L"No valid HWND passed; using hidden host window.");
+            // No valid HWND passed; using hidden host window.
         }
-
 
         // Persist initialization callback object
         g_initCb = std::make_shared<InitializationCallback>();
         g_initCb->OnInitializationSuccess = [](const InitializationSuccessEventArgs& /*args*/) {
             g_initialized.store(true, std::memory_order_release);
-            NativeLogW(2, L"Init", L"SDK reports initialization success.");
             SignalInitSuccessIfReady();
             };
-        g_initCb->OnInitializationFailure = [](const InitializationFailureEventArgs& /*args*/) {
-            if (g_cbs.initFailure) g_cbs.initFailure(0, L"Initialization Failed");
-            NativeLogW(4, L"Init", L"Initialization failed.");
+        g_initCb->OnInitializationFailure = [](const InitializationFailureEventArgs& args) {
+            std::wstring wmsg = Utf8ToW(args.ErrorMessage);
+            if (g_cbs.initFailure) g_cbs.initFailure(0, wmsg.empty() ? L"Initialization Failed" : wmsg.c_str());
             };
 
         // Kick off async init (non-blocking)
@@ -146,14 +134,13 @@ LIFTOFF_API bool __stdcall Liftoff_Initialize(const wchar_t* appIdW, void* hwnd)
             try {
                 if (auto* inst = f.get()) {
                     g_sdkInstance.store(inst, std::memory_order_release);
-                    NativeLogW(2, L"Init", L"Instance pointer captured from future.");
                     if (g_initialized.load(std::memory_order_acquire)) {
                         SignalInitSuccessIfReady();
                     }
                 }
             }
             catch (...) {
-                NativeLogW(4, L"Init", L"Initialize future threw; failure should already be signaled.");
+                // Initialize future threw; failure should already be signaled.
             }
             }).detach();
 
@@ -166,7 +153,6 @@ LIFTOFF_API bool __stdcall Liftoff_Initialize(const wchar_t* appIdW, void* hwnd)
                 if (SUCCEEDED(fn(nullptr, &ver)) && ver) {
                     std::wstring msg = L"WebView2 version: ";
                     msg += ver;
-                    NativeLogW(2, L"WebView2", msg.c_str());
                     CoTaskMemFree(ver);
                 }
             }
@@ -176,8 +162,7 @@ LIFTOFF_API bool __stdcall Liftoff_Initialize(const wchar_t* appIdW, void* hwnd)
         return true;
     }
     catch (...) {
-        if (g_cbs.initFailure) g_cbs.initFailure(-1, L"Exception during Initialize");
-        NativeLogW(4, L"Init", L"Exception during Initialize.");
+        if (g_cbs.initFailure) g_cbs.initFailure(0, L"Exception during Initialize");
         return false;
     }
 }
@@ -190,9 +175,7 @@ LIFTOFF_API bool __stdcall Liftoff_IsInitialized() {
 LIFTOFF_API bool __stdcall Liftoff_LoadAd(const wchar_t* placementW) {
     LiftoffAds* inst = g_sdkInstance.load(std::memory_order_acquire);
     if (!inst) {
-        if (g_cbs.loadFailure)
-            g_cbs.loadFailure(L"", -2, L"SDK instance not ready. Wait for OnInitialized before LoadAd.");
-        NativeLogW(3, L"LoadAd", L"Called before instance was ready.");
+        if (g_cbs.loadFailure) g_cbs.loadFailure(L"", 1, L"SDK instance not ready. Wait for OnInitialized before LoadAd.");
         return false;
     }
 
@@ -204,33 +187,26 @@ LIFTOFF_API bool __stdcall Liftoff_LoadAd(const wchar_t* placementW) {
 
         cb->OnAdLoadSuccess = [cb](AdLoadEventArgs args) {
             if (g_cbs.loadSuccess) g_cbs.loadSuccess(Utf8ToW(args.Placement).c_str());
-            NativeLogW(2, L"LoadAd", L"Loaded successfully.");
             };
         cb->OnAdLoadFailure = [cb](AdLoadEventArgs args) {
-            int code = 0;
-            const wchar_t* msg = L"Load failed";
-            if (g_cbs.loadFailure) g_cbs.loadFailure(Utf8ToW(args.Placement).c_str(), code, msg);
-            NativeLogW(3, L"LoadAd", L"Load failed (async).");
+            std::wstring wplacement = Utf8ToW(args.Placement);
+            std::wstring wmsg = Utf8ToW(args.ErrorMessage);
+            if (g_cbs.loadFailure)
+                g_cbs.loadFailure(wplacement.c_str(), 1, wmsg.empty() ? L"Load failed" : wmsg.c_str());
             };
 
         bool kicked = inst->LoadAd(placement, *cb);
         if (!kicked && g_cbs.loadFailure) {
-            g_cbs.loadFailure(placementWStr.c_str(), -3, L"LoadAd returned false");
-            NativeLogW(3, L"LoadAd", L"Synchronous refusal: LoadAd returned false.");
-        }
-        else {
-            NativeLogW(2, L"LoadAd", L"LoadAd request issued.");
+            g_cbs.loadFailure(placementWStr.c_str(), 1, L"LoadAd returned false");
         }
         return kicked;
     }
     catch (const std::exception& ex) {
-        if (g_cbs.loadFailure) g_cbs.loadFailure(L"", -1, Utf8ToW(ex.what()).c_str());
-        NativeLogW(4, L"LoadAd", L"Exception during LoadAd.");
+        if (g_cbs.loadFailure) g_cbs.loadFailure(L"", 1, Utf8ToW(ex.what()).c_str());
         return false;
     }
     catch (...) {
-        if (g_cbs.loadFailure) g_cbs.loadFailure(L"", -1, L"Exception during LoadAd");
-        NativeLogW(4, L"LoadAd", L"Unknown exception during LoadAd.");
+        if (g_cbs.loadFailure) g_cbs.loadFailure(L"", 1, L"Exception during LoadAd");
         return false;
     }
 }
@@ -238,8 +214,7 @@ LIFTOFF_API bool __stdcall Liftoff_LoadAd(const wchar_t* placementW) {
 LIFTOFF_API bool __stdcall Liftoff_PlayAd(const wchar_t* placementW) {
     LiftoffAds* inst = g_sdkInstance.load(std::memory_order_acquire);
     if (!inst) {
-        if (g_cbs.adPlayFailure) g_cbs.adPlayFailure(L"", -2, L"SDK instance not ready. Wait for OnInitialized before PlayAd.");
-        NativeLogW(3, L"PlayAd", L"Called before instance was ready.");
+        if (g_cbs.adPlayFailure) g_cbs.adPlayFailure(L"", 2, L"SDK instance not ready. Wait for OnInitialized before PlayAd.");
         return false;
     }
 
@@ -251,23 +226,21 @@ LIFTOFF_API bool __stdcall Liftoff_PlayAd(const wchar_t* placementW) {
 
         pcb->OnAdStart = [pcb](AdPlayEventArgs args) {
             if (g_cbs.adStart) g_cbs.adStart(Utf8ToW(args.Placement).c_str(), Utf8ToW(args.EventID).c_str());
-            NativeLogW(2, L"PlayAd", L"Ad started.");
             };
         pcb->OnAdEnd = [pcb](AdPlayEventArgs args) {
             if (g_cbs.adEnd) g_cbs.adEnd(Utf8ToW(args.Placement).c_str());
-            NativeLogW(2, L"PlayAd", L"Ad ended.");
             };
         pcb->OnAdPlayFailure = [pcb](AdPlayEventArgs args) {
-            if (g_cbs.adPlayFailure) g_cbs.adPlayFailure(Utf8ToW(args.Placement).c_str(), 0, L"Play failed");
-            NativeLogW(3, L"PlayAd", L"Ad play failed (async).");
+            std::wstring wplacement = Utf8ToW(args.Placement);
+            std::wstring wmsg = Utf8ToW(args.ErrorMessage);
+            if (g_cbs.adPlayFailure)
+                g_cbs.adPlayFailure(wplacement.c_str(), 2, wmsg.empty() ? L"Play failed" : wmsg.c_str());
             };
         pcb->OnAdPlayRewarded = [pcb](AdPlayEventArgs args) {
             if (g_cbs.adRewarded) g_cbs.adRewarded(Utf8ToW(args.Placement).c_str());
-            NativeLogW(2, L"PlayAd", L"Rewarded.");
             };
         pcb->OnAdPlayClick = [pcb](AdPlayEventArgs args) {
             if (g_cbs.adClick) g_cbs.adClick(Utf8ToW(args.Placement).c_str());
-            NativeLogW(2, L"PlayAd", L"Clicked.");
             };
 
         // PlayAd returns LiftoffAdPlayInfo (NOT a bool)
@@ -277,22 +250,17 @@ LIFTOFF_API bool __stdcall Liftoff_PlayAd(const wchar_t* placementW) {
             std::wstring wmsg = Utf8ToW(info.ErrorMessage);
             std::wstring wplacement = Utf8ToW(info.Placement);
             if (g_cbs.adPlayFailure)
-                g_cbs.adPlayFailure(wplacement.c_str(), -3, wmsg.empty() ? L"PlayAd refused" : wmsg.c_str());
-            NativeLogW(3, L"PlayAd", wmsg.empty() ? L"Synchronous refusal: PlayAd failed." : wmsg.c_str());
+                g_cbs.adPlayFailure(wplacement.c_str(), 2, wmsg.empty() ? L"PlayAd refused" : wmsg.c_str());
             return false;
         }
-
-        NativeLogW(2, L"PlayAd", L"PlayAd request accepted.");
-        return true; // callbacks will follow
+        return true;
     }
     catch (const std::exception& ex) {
-        if (g_cbs.adPlayFailure) g_cbs.adPlayFailure(L"", -1, Utf8ToW(ex.what()).c_str());
-        NativeLogW(4, L"PlayAd", L"Exception during PlayAd.");
+        if (g_cbs.adPlayFailure) g_cbs.adPlayFailure(L"", 2, Utf8ToW(ex.what()).c_str());
         return false;
     }
     catch (...) {
         if (g_cbs.adPlayFailure) g_cbs.adPlayFailure(L"", -1, L"Exception during PlayAd");
-        NativeLogW(4, L"PlayAd", L"Unknown exception during PlayAd.");
         return false;
     }
 }
@@ -321,8 +289,6 @@ LIFTOFF_API void __stdcall Liftoff_Shutdown() {
     g_initCb.reset();
 
     DestroyHostWindow();
-
-    NativeLogW(2, L"Shutdown", L"SDK state and callbacks cleared.");
 }
 
 LIFTOFF_API bool __stdcall Liftoff_LoadAd_WithMarkup(const wchar_t* placementW,
@@ -331,8 +297,7 @@ LIFTOFF_API bool __stdcall Liftoff_LoadAd_WithMarkup(const wchar_t* placementW,
     LiftoffAds* inst = g_sdkInstance.load(std::memory_order_acquire);
     if (!inst) {
         if (g_cbs.loadFailure)
-            g_cbs.loadFailure(L"", -2, L"SDK instance not ready. Wait for OnInitialized before LoadAd.");
-        NativeLogW(3, L"LoadAd", L"Called before instance was ready (mediated).");
+            g_cbs.loadFailure(L"", 1, L"SDK instance not ready. Wait for OnInitialized before LoadAd.");
         return false;
     }
 
@@ -346,32 +311,27 @@ LIFTOFF_API bool __stdcall Liftoff_LoadAd_WithMarkup(const wchar_t* placementW,
         auto cb = std::make_shared<AdLoadCallback>();
         cb->OnAdLoadSuccess = [cb](AdLoadEventArgs args) {
             if (g_cbs.loadSuccess) g_cbs.loadSuccess(Utf8ToW(args.Placement).c_str());
-            NativeLogW(2, L"LoadAd", L"Mediated load success.");
             };
         cb->OnAdLoadFailure = [cb](AdLoadEventArgs args) {
-            if (g_cbs.loadFailure) g_cbs.loadFailure(Utf8ToW(args.Placement).c_str(), 0, L"Load failed");
-            NativeLogW(3, L"LoadAd", L"Mediated load failed (async).");
+            std::wstring wplacement = Utf8ToW(args.Placement);
+            std::wstring wmsg = Utf8ToW(args.ErrorMessage);
+            if (g_cbs.loadFailure)
+                g_cbs.loadFailure(wplacement.c_str(), 1, wmsg.empty() ? L"Load failed" : wmsg.c_str());
             };
 
         // Use mediated API
         bool kicked = inst->LoadMediatedAd(placement, *cb, markup);
         if (!kicked && g_cbs.loadFailure) {
-            g_cbs.loadFailure(placementWStr.c_str(), -3, L"LoadMediatedAd returned false");
-            NativeLogW(3, L"LoadAd", L"Mediated: LoadMediatedAd returned false.");
-        }
-        else {
-            NativeLogW(2, L"LoadAd", L"Mediated: request issued.");
+            g_cbs.loadFailure(placementWStr.c_str(), 1, L"LoadMediatedAd returned false");
         }
         return kicked;
     }
     catch (const std::exception& ex) {
-        if (g_cbs.loadFailure) g_cbs.loadFailure(L"", -1, Utf8ToW(ex.what()).c_str());
-        NativeLogW(4, L"LoadAd", L"Exception during LoadMediatedAd.");
+        if (g_cbs.loadFailure) g_cbs.loadFailure(L"", 1, Utf8ToW(ex.what()).c_str());
         return false;
     }
     catch (...) {
-        if (g_cbs.loadFailure) g_cbs.loadFailure(L"", -1, L"Exception during LoadMediatedAd");
-        NativeLogW(4, L"LoadAd", L"Unknown exception during LoadMediatedAd.");
+        if (g_cbs.loadFailure) g_cbs.loadFailure(L"", 1, L"Exception during LoadMediatedAd");
         return false;
     }
 }
@@ -382,8 +342,7 @@ LIFTOFF_API bool __stdcall Liftoff_PlayAd_WithMarkup(const wchar_t* placementW,
     LiftoffAds* inst = g_sdkInstance.load(std::memory_order_acquire);
     if (!inst) {
         if (g_cbs.adPlayFailure)
-            g_cbs.adPlayFailure(L"", -2, L"SDK instance not ready. Wait for OnInitialized before PlayAd.");
-        NativeLogW(3, L"PlayAd", L"Called before instance was ready (mediated).");
+            g_cbs.adPlayFailure(L"", 2, L"SDK instance not ready. Wait for OnInitialized before PlayAd.");
         return false;
     }
 
@@ -397,23 +356,21 @@ LIFTOFF_API bool __stdcall Liftoff_PlayAd_WithMarkup(const wchar_t* placementW,
         auto pcb = std::make_shared<AdPlayCallback>();
         pcb->OnAdStart = [pcb](AdPlayEventArgs args) {
             if (g_cbs.adStart) g_cbs.adStart(Utf8ToW(args.Placement).c_str(), Utf8ToW(args.EventID).c_str());
-            NativeLogW(2, L"PlayAd", L"Mediated ad started.");
             };
         pcb->OnAdEnd = [pcb](AdPlayEventArgs args) {
             if (g_cbs.adEnd) g_cbs.adEnd(Utf8ToW(args.Placement).c_str());
-            NativeLogW(2, L"PlayAd", L"Mediated ad ended.");
             };
         pcb->OnAdPlayFailure = [pcb](AdPlayEventArgs args) {
-            if (g_cbs.adPlayFailure) g_cbs.adPlayFailure(Utf8ToW(args.Placement).c_str(), 0, L"Play failed");
-            NativeLogW(3, L"PlayAd", L"Mediated play failed (async).");
+            std::wstring wplacement = Utf8ToW(args.Placement);
+            std::wstring wmsg = Utf8ToW(args.ErrorMessage);
+            if (g_cbs.adPlayFailure)
+                g_cbs.adPlayFailure(wplacement.c_str(), 2, wmsg.empty() ? L"Play failed" : wmsg.c_str());
             };
         pcb->OnAdPlayRewarded = [pcb](AdPlayEventArgs args) {
             if (g_cbs.adRewarded) g_cbs.adRewarded(Utf8ToW(args.Placement).c_str());
-            NativeLogW(2, L"PlayAd", L"Mediated rewarded.");
             };
         pcb->OnAdPlayClick = [pcb](AdPlayEventArgs args) {
             if (g_cbs.adClick) g_cbs.adClick(Utf8ToW(args.Placement).c_str());
-            NativeLogW(2, L"PlayAd", L"Mediated clicked.");
             };
 
         LiftoffAdPlayInfo info = inst->PlayMediatedAd(AdConfig(), placement, *pcb, markup);
@@ -421,22 +378,17 @@ LIFTOFF_API bool __stdcall Liftoff_PlayAd_WithMarkup(const wchar_t* placementW,
             std::wstring wmsg = Utf8ToW(info.ErrorMessage);
             std::wstring wplacement = Utf8ToW(info.Placement);
             if (g_cbs.adPlayFailure)
-                g_cbs.adPlayFailure(wplacement.c_str(), -3, wmsg.empty() ? L"PlayMediatedAd refused" : wmsg.c_str());
-            NativeLogW(3, L"PlayAd", wmsg.empty() ? L"Mediated: Play failed." : wmsg.c_str());
+                g_cbs.adPlayFailure(wplacement.c_str(), 2, wmsg.empty() ? L"PlayMediatedAd refused" : wmsg.c_str());
             return false;
         }
-
-        NativeLogW(2, L"PlayAd", L"Mediated: request accepted.");
         return true;
     }
     catch (const std::exception& ex) {
-        if (g_cbs.adPlayFailure) g_cbs.adPlayFailure(L"", -1, Utf8ToW(ex.what()).c_str());
-        NativeLogW(4, L"PlayAd", L"Exception during PlayMediatedAd.");
+        if (g_cbs.adPlayFailure) g_cbs.adPlayFailure(L"", 2, Utf8ToW(ex.what()).c_str());
         return false;
     }
     catch (...) {
-        if (g_cbs.adPlayFailure) g_cbs.adPlayFailure(L"", -1, L"Exception during PlayMediatedAd");
-        NativeLogW(4, L"PlayAd", L"Unknown exception during PlayMediatedAd.");
+        if (g_cbs.adPlayFailure) g_cbs.adPlayFailure(L"", 2, L"Exception during PlayMediatedAd");
         return false;
     }
 }
@@ -446,13 +398,13 @@ LIFTOFF_API bool __stdcall Liftoff_IsWebView2Available() {
     typedef HRESULT(WINAPI* GetVerFn)(PCWSTR, LPWSTR*);
     HMODULE h = LoadLibraryW(L"WebView2Loader.dll");
     if (!h) {
-        NativeLogW(3, L"WebView2", L"WebView2Loader.dll not found.");
+        // WebView2Loader.dll not found.
         return false;
     }
 
     auto fn = reinterpret_cast<GetVerFn>(GetProcAddress(h, "GetAvailableCoreWebView2BrowserVersionString"));
     if (!fn) {
-        NativeLogW(3, L"WebView2", L"GetAvailableCoreWebView2BrowserVersionString not found.");
+        // GetAvailableCoreWebView2BrowserVersionString not found.
         FreeLibrary(h);
         return false;
     }
@@ -463,13 +415,12 @@ LIFTOFF_API bool __stdcall Liftoff_IsWebView2Available() {
     if (SUCCEEDED(hr) && ver) {
         std::wstring msg = L"WebView2 version: ";
         msg += ver;
-        NativeLogW(2, L"WebView2", msg.c_str());  // VS Output/DebugView, and Unity via diag callback (if set)
         CoTaskMemFree(ver);
         FreeLibrary(h);
         return true;
     }
     else {
-        NativeLogW(3, L"WebView2", L"WebView2 runtime not installed.");
+        // WebView2 runtime not installed.
         FreeLibrary(h);
         return false;
     }
@@ -511,13 +462,13 @@ LIFTOFF_API void __stdcall Liftoff_ClearDiagnosticCallback()
 // COPPA
 LIFTOFF_API void __stdcall Liftoff_SetCoppaStatus(bool status) {
     try { LiftoffAds::SetCoppaStatus(status); }
-    catch (...) { NativeLogW(3, L"Privacy", L"SetCoppaStatus exception"); }
+    catch (...) { /* SetCoppaStatus exception */ }
 }
 
 // CCPA
 LIFTOFF_API void __stdcall Liftoff_SetCcpaStatus(int status) {
     try { LiftoffAds::SetCcpaStatus(static_cast<CcpaConsentStatus>(status)); }
-    catch (...) { NativeLogW(3, L"Privacy", L"SetCcpaStatus exception"); }
+    catch (...) { /* SetCcpaStatus exception */ }
 }
 
 // GDPR
@@ -527,19 +478,16 @@ LIFTOFF_API void __stdcall Liftoff_SetGdprConsentStatus(int status, const wchar_
         LiftoffAds::SetGdprConsentStatus(static_cast<GdprConsentStatus>(status), version);
     }
     catch (...) {
-        NativeLogW(3, L"Privacy", L"SetGdprConsentStatus exception");
+        /* SetGdprConsentStatus exception */
     }
 }
 
 LIFTOFF_API void __stdcall Liftoff_SetDisableAshwidTracking(bool disabled)
 {
     try {
-        LiftoffAds::SetDisableAshwidTracking(disabled); // SDK static call
-        NativeLogW(2, L"Init", disabled
-            ? L"ASHWID tracking disabled (via static setter)."
-            : L"ASHWID tracking enabled (via static setter).");
+        LiftoffAds::SetDisableAshwidTracking(disabled);
     }
     catch (...) {
-        NativeLogW(3, L"Init", L"SetDisableAshwidTracking exception");
+        /* SetDisableAshwidTracking exception */
     }
 }
