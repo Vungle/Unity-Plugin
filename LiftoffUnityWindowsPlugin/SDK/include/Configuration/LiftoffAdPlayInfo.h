@@ -15,12 +15,17 @@ public:
     std::string ErrorMessage = "";
     // What was the Vungle event ID for this ad play; this can be used to report back to Vungle
     std::string VungleEventId = "";
-
+	// What was the creative id for this ad play
+	std::string CreativeId = "";
+	// What was the campaign id for this ad play
+	std::string CampaignId = "";
     std::string ToString() const {
         std::ostringstream oss;
         oss << "PlayAd returned: Success " << (Success ? "true" : "false")
             << "; Placement " << Placement
             << ", Vungle Event Id: " << VungleEventId
+			<< ", Creative Id: " << CreativeId
+			<< ", Campaign Id: " << CampaignId
             << ", Error Message " << ErrorMessage;
         return oss.str();
     }
