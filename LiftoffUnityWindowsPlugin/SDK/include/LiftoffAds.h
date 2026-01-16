@@ -51,21 +51,21 @@ private:
 public:  
 
    static std::future<LiftoffAds*> InitializeAsync(  
-       const std::string& appID,  
+       const std::string appID,  
        HWND hWnd,  
-	   const InitializationCallback& initCallback);
+	   const InitializationCallback initCallback);
 
    static std::future<LiftoffAds*> InitializeAsync(  
-       const std::string& appID,  
-       const LiftoffSdkConfig& config,  
+       const std::string appID,  
+       const LiftoffSdkConfig config,  
        HWND hWnd,  
-       const InitializationCallback& initCallback);  
+       const InitializationCallback initCallback);  
 
-   bool LoadAd(const std::string& placement,
+   bool LoadAd(const std::string placement,
        const AdLoadCallback callback);
-   LiftoffAdPlayInfo PlayAd(const std::string& placement, const AdPlayCallback callbacks, const AdConfig config);
-   LiftoffAdPlayInfo PlayAd(const std::string& placement, const AdPlayCallback callbacks);
-   bool IsAdPlayable(const std::string& placement); // Add this declaration
+   LiftoffAdPlayInfo PlayAd(const std::string placement, const AdPlayCallback callbacks, const AdConfig config);
+   LiftoffAdPlayInfo PlayAd(const std::string placement, const AdPlayCallback callbacks);
+   bool IsAdPlayable(const std::string placement); // Add this declaration
    static void AddDiagnosticListener(std::function<void(const DiagnosticLogEvent)> listener);  
    static void RemoveDiagnosticListener(std::function<void(const DiagnosticLogEvent)> listener);  
    static bool GetCoppaStatus();
@@ -74,7 +74,7 @@ public:
    static void SetCcpaStatus(CcpaConsentStatus status);
 
    static GdprConsentStatus GetGdprConsentStatus();
-   static void SetGdprConsentStatus(GdprConsentStatus status, const std::string& version);
+   static void SetGdprConsentStatus(GdprConsentStatus status, const std::string version);
    static std::string GetGdprConsentMessageVersion();
    static void ResetGdprConsentStatusToUnknown();
 
@@ -82,25 +82,25 @@ public:
    static bool GetDisableASHWID();
 
    // Mediation: get a mediation super token v4 for a given placement.
-   std::string GetMediationSuperToken(const std::string& targetPlacement);
-   bool LoadMediatedAd(const std::string& placement, const AdLoadCallback callback, 
-       const std::string& headerBiddingMarkup);
+   std::string GetMediationSuperToken(const std::string targetPlacement);
+   bool LoadMediatedAd(const std::string placement, const AdLoadCallback callback, 
+       const std::string headerBiddingMarkup);
 
 
    // New: Play a mediated ad synchronously. Verifies placement is header-bidding and then plays.
    // Returns LiftoffAdPlayInfo.
    LiftoffAdPlayInfo PlayMediatedAd(
-       const AdConfig& config,
-       const std::string& placement,
-       const AdPlayCallback& callbacks,
-       const std::string& headerBiddingMarkup
+       const AdConfig config,
+       const std::string placement,
+       const AdPlayCallback callbacks,
+       const std::string headerBiddingMarkup
        );
 
 private:
     // C++ equivalent of PlayAdInternal from C#
     static LiftoffAdPlayInfo PlayAdInternal(
-        const AdConfig& adConfig,
-        const std::string& placement,
-        const AdPlayCallback& callbacks,
-        const std::string& headerBiddingMarkup = "");
+        const AdConfig adConfig,
+        const std::string placement,
+        const AdPlayCallback callbacks,
+        const std::string headerBiddingMarkup = "");
 };
