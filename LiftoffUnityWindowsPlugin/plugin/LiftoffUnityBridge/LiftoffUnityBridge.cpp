@@ -215,16 +215,13 @@ LIFTOFF_API bool __stdcall Liftoff_LoadAd(const wchar_t* placementW) {
         std::string placement = WToUtf8(placementWStr);
 
         auto cb = std::make_shared<AdLoadCallback>();
-        std::weak_ptr<AdLoadCallback> weak = cb;
 
-        cb->OnAdLoadSuccess = [weak](AdLoadEventArgs args) {
-            if (!weak.lock()) return;
+        cb->OnAdLoadSuccess = [](AdLoadEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             if (cbs.loadSuccess) cbs.loadSuccess(Utf8ToW(args.Placement).c_str());
             };
 
-        cb->OnAdLoadFailure = [weak](AdLoadEventArgs args) {
-            if (!weak.lock()) return;
+        cb->OnAdLoadFailure = [](AdLoadEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             std::wstring wplacement = Utf8ToW(args.Placement);
             std::wstring wmsg = Utf8ToW(args.ErrorMessage);
@@ -265,22 +262,18 @@ LIFTOFF_API bool __stdcall Liftoff_PlayAd(const wchar_t* placementW) {
         std::string placement = WToUtf8(placementWStr);
 
         auto pcb = std::make_shared<AdPlayCallback>();
-        std::weak_ptr<AdPlayCallback> weak = pcb;
 
-        pcb->OnAdStart = [weak](const AdPlayEventArgs args) {
-            if (!weak.lock()) return;
+        pcb->OnAdStart = [](const AdPlayEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             if (cbs.adStart) cbs.adStart(Utf8ToW(args.Placement).c_str(), Utf8ToW(args.EventID).c_str());
             };
 
-        pcb->OnAdEnd = [weak](const AdPlayEventArgs args) {
-            if (!weak.lock()) return;
+        pcb->OnAdEnd = [](const AdPlayEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             if (cbs.adEnd) cbs.adEnd(Utf8ToW(args.Placement).c_str());
             };
 
-        pcb->OnAdPlayFailure = [weak](const AdPlayEventArgs args) {
-            if (!weak.lock()) return;
+        pcb->OnAdPlayFailure = [](const AdPlayEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             std::wstring wplacement = Utf8ToW(args.Placement);
             std::wstring wmsg = Utf8ToW(args.ErrorMessage);
@@ -289,14 +282,12 @@ LIFTOFF_API bool __stdcall Liftoff_PlayAd(const wchar_t* placementW) {
             }
             };
 
-        pcb->OnAdPlayRewarded = [weak](const AdPlayEventArgs args) {
-            if (!weak.lock()) return;
+        pcb->OnAdPlayRewarded = [](const AdPlayEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             if (cbs.adRewarded) cbs.adRewarded(Utf8ToW(args.Placement).c_str());
             };
 
-        pcb->OnAdPlayClick = [weak](const AdPlayEventArgs args) {
-            if (!weak.lock()) return;
+        pcb->OnAdPlayClick = [](const AdPlayEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             if (cbs.adClick) cbs.adClick(Utf8ToW(args.Placement).c_str());
             };
