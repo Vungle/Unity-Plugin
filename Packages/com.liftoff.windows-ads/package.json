@@ -1,7 +1,7 @@
 {
   "name": "com.liftoff.windows-ads",
   "displayName": "Liftoff Ads (Windows)",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "unity": "2021.3",
   "description": "Windows bridge for the Vungle/Liftoff Ads SDK (WebView2-based). Includes native DLL and C# wrappers; supports mediated header-bidding markup and privacy APIs.",
   "keywords": ["vungle", "liftoff", "ads", "windows", "webview2"],
