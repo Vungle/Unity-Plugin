@@ -21,12 +21,17 @@ using namespace std;
 static std::atomic<LiftoffAds*> g_sdkInstance{ nullptr };
 static std::atomic<bool>        g_initialized{ false };
 static std::atomic<bool>        g_initSuccessSignaled{ false };
+static std::atomic<bool>        g_shuttingDown{ false };
 
 static BridgeCallbacks          g_cbs{};
 static std::mutex               g_cbsMutex;
 
 // Keep init callback alive for lifetime of SDK
 static std::shared_ptr<InitializationCallback> g_initCb;
+
+// Init thread tracking for safe shutdown
+static std::thread              g_initThread;
+static std::mutex               g_initThreadMutex;
 
 // --------- Diagnostics state ------------
 static DiagnosticCB g_diagCb = nullptr;
@@ -172,23 +177,40 @@ LIFTOFF_API bool __stdcall Liftoff_Initialize(const wchar_t* appIdW, void* hwnd)
             };
 
         // Kick off async init
+        g_shuttingDown.store(false, std::memory_order_release);
         auto fut = LiftoffAds::InitializeAsync(appId, hWnd, *g_initCb);
 
-        std::thread([f = std::move(fut)]() mutable {
-            try {
-                if (auto* inst = f.get()) {
-                    g_sdkInstance.store(inst, std::memory_order_release);
-                    if (g_initialized.load(std::memory_order_acquire)) {
-                        SignalInitSuccessIfReady();
+        {
+            std::lock_guard<std::mutex> tlock(g_initThreadMutex);
+            if (g_initThread.joinable()) g_initThread.join();
+            g_initThread = std::thread([f = std::move(fut)]() mutable {
+                try {
+                    if (auto* inst = f.get()) {
+                        if (g_shuttingDown.load(std::memory_order_acquire)) return;
+                        g_sdkInstance.store(inst, std::memory_order_release);
+                        if (g_initialized.load(std::memory_order_acquire)) {
+                            SignalInitSuccessIfReady();
+                        }
                     }
                 }
-            }
-            catch (...) {
-                // failure should have been signaled via callback (if SDK does that)
-            }
-            }).detach();
+                catch (const std::exception& ex) {
+                    OutputDebugStringA("[LiftoffBridge] Init thread exception: ");
+                    OutputDebugStringA(ex.what());
+                    OutputDebugStringA("\n");
+                }
+                catch (...) {
+                    OutputDebugStringA("[LiftoffBridge] Init thread unknown exception\n");
+                }
+            });
+        }
 
         return true;
+    }
+    catch (const std::exception& ex) {
+        auto cbs = GetCallbacksSnapshot();
+        std::wstring wmsg = Utf8ToW(ex.what());
+        if (cbs.initFailure) cbs.initFailure(0, wmsg.empty() ? L"Exception during Initialize" : wmsg.c_str());
+        return false;
     }
     catch (...) {
         auto cbs = GetCallbacksSnapshot();
@@ -318,6 +340,15 @@ LIFTOFF_API bool __stdcall Liftoff_PlayAd(const wchar_t* placementW) {
 }
 
 LIFTOFF_API void __stdcall Liftoff_Shutdown() {
+    // Signal the init thread to abort if still running
+    g_shuttingDown.store(true, std::memory_order_release);
+
+    // Wait for the init thread to finish before tearing down state
+    {
+        std::lock_guard<std::mutex> tlock(g_initThreadMutex);
+        if (g_initThread.joinable()) g_initThread.join();
+    }
+
     {
         std::lock_guard<std::mutex> lock(g_diagMutex);
         if (g_diagRegistered && g_diagForwarder) {
@@ -523,13 +554,15 @@ LIFTOFF_API void __stdcall Liftoff_ClearDiagnosticCallback()
 // COPPA
 LIFTOFF_API void __stdcall Liftoff_SetCoppaStatus(bool status) {
     try { LiftoffAds::SetCoppaStatus(status); }
-    catch (...) {}
+    catch (const std::exception& ex) { OutputDebugStringA("[LiftoffBridge] SetCoppaStatus: "); OutputDebugStringA(ex.what()); OutputDebugStringA("\n"); }
+    catch (...) { OutputDebugStringA("[LiftoffBridge] SetCoppaStatus: unknown exception\n"); }
 }
 
 // CCPA
 LIFTOFF_API void __stdcall Liftoff_SetCcpaStatus(int status) {
     try { LiftoffAds::SetCcpaStatus(static_cast<CcpaConsentStatus>(status)); }
-    catch (...) {}
+    catch (const std::exception& ex) { OutputDebugStringA("[LiftoffBridge] SetCcpaStatus: "); OutputDebugStringA(ex.what()); OutputDebugStringA("\n"); }
+    catch (...) { OutputDebugStringA("[LiftoffBridge] SetCcpaStatus: unknown exception\n"); }
 }
 
 // GDPR
@@ -538,11 +571,13 @@ LIFTOFF_API void __stdcall Liftoff_SetGdprConsentStatus(int status, const wchar_
         std::string version = WToUtf8(std::wstring(versionW ? versionW : L""));
         LiftoffAds::SetGdprConsentStatus(static_cast<GdprConsentStatus>(status), version);
     }
-    catch (...) {}
+    catch (const std::exception& ex) { OutputDebugStringA("[LiftoffBridge] SetGdprConsentStatus: "); OutputDebugStringA(ex.what()); OutputDebugStringA("\n"); }
+    catch (...) { OutputDebugStringA("[LiftoffBridge] SetGdprConsentStatus: unknown exception\n"); }
 }
 
 LIFTOFF_API void __stdcall Liftoff_SetDisableAshwidTracking(bool disabled)
 {
     try { LiftoffAds::SetDisableAshwidTracking(disabled); }
-    catch (...) {}
+    catch (const std::exception& ex) { OutputDebugStringA("[LiftoffBridge] SetDisableAshwidTracking: "); OutputDebugStringA(ex.what()); OutputDebugStringA("\n"); }
+    catch (...) { OutputDebugStringA("[LiftoffBridge] SetDisableAshwidTracking: unknown exception\n"); }
 }
