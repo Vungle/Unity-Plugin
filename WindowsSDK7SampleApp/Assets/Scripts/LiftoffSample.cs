@@ -173,10 +173,10 @@ namespace Liftoff.Windows
                 SaveAppId(appIdInput);
                 ShowPrivacyPage();
             });
-            LiftoffUIHelper.CreateButton("Super Token", content, () =>
+            LiftoffUIHelper.CreateButton("Bidding", content, () =>
             {
                 SaveAppId(appIdInput);
-                ShowSuperTokenPage();
+                ShowBiddingPage();
             });
 
             LiftoffUIHelper.CreateSpacer(content, 6);
@@ -215,6 +215,14 @@ namespace Liftoff.Windows
                 SavePlacement(placementInput);
                 OnPlayClicked();
             }, color: new Color(0.18f, 0.62f, 0.34f));
+
+            LiftoffUIHelper.CreateSpacer(content, 4);
+
+            LiftoffUIHelper.CreateButton("Is Ad Playable?", content, () =>
+            {
+                SavePlacement(placementInput);
+                OnIsAdPlayableClicked();
+            }, color: new Color(0.27f, 0.27f, 0.32f));
 
             LiftoffUIHelper.CreateSpacer(content, 12);
 
@@ -271,47 +279,87 @@ namespace Liftoff.Windows
         }
 
         // ============================================
-        // SUPER TOKEN PAGE
+        // BIDDING PAGE
         // ============================================
-        void ShowSuperTokenPage()
+        void ShowBiddingPage()
         {
             var content = LiftoffUIHelper.SetupScene();
             TextMeshProUGUI tokenDisplay = null;
+            TMP_InputField markupInput = null;
 
             LiftoffUIHelper.CreateButton("< Back", content, ShowLaunchPage,
                 50, new Color(0.38f, 0.38f, 0.43f));
-            LiftoffUIHelper.CreateTitle("Super Token", content);
+            LiftoffUIHelper.CreateTitle("Bidding", content);
             LiftoffUIHelper.CreateSpacer(content, 8);
 
+            // Placement
             LiftoffUIHelper.CreateLabel("Placement", content, 20, FontStyles.Normal,
                 TextAlignmentOptions.MidlineLeft, 28);
             var placementInput = LiftoffUIHelper.CreateInputField("Enter Placement ID", content,
                 defaultValue: placement);
 
             LiftoffUIHelper.CreateSpacer(content, 6);
+            LiftoffUIHelper.CreateSeparator(content);
+            LiftoffUIHelper.CreateSpacer(content, 6);
 
+            // Step 1: Get Super Token
+            LiftoffUIHelper.CreateLabel("1. Get Super Token", content, 22, FontStyles.Bold,
+                TextAlignmentOptions.MidlineLeft, 30);
             LiftoffUIHelper.CreateButton("Get Super Token", content, () =>
             {
                 SavePlacement(placementInput);
                 OnGetSuperTokenClicked(tokenDisplay);
             });
 
-            LiftoffUIHelper.CreateSpacer(content, 6);
-            LiftoffUIHelper.CreateSeparator(content);
-            LiftoffUIHelper.CreateSpacer(content, 6);
-
-            // Token display area
-            LiftoffUIHelper.CreateLabel("Token Value", content, 26, FontStyles.Bold,
-                TextAlignmentOptions.MidlineLeft);
-
-            var (td, _) = LiftoffUIHelper.CreateLogArea(content, 300);
+            var (td, _) = LiftoffUIHelper.CreateLogArea(content, 150);
             tokenDisplay = td;
             tokenDisplay.text = "(No token retrieved yet)";
             tokenDisplay.color = new Color(0.85f, 0.85f, 0.95f);
 
             LiftoffUIHelper.CreateSpacer(content, 6);
+            LiftoffUIHelper.CreateSeparator(content);
+            LiftoffUIHelper.CreateSpacer(content, 6);
 
-            BuildLogArea(content, 300);
+            // Step 2: Enter markup from auction response
+            LiftoffUIHelper.CreateLabel("2. Bidding Markup (from auction)", content, 22, FontStyles.Bold,
+                TextAlignmentOptions.MidlineLeft, 30);
+            markupInput = LiftoffUIHelper.CreateInputField("Paste header bidding markup", content);
+
+            LiftoffUIHelper.CreateSpacer(content, 6);
+            LiftoffUIHelper.CreateSeparator(content);
+            LiftoffUIHelper.CreateSpacer(content, 6);
+
+            // Step 3: Load & Play with markup
+            LiftoffUIHelper.CreateLabel("3. Load & Play", content, 22, FontStyles.Bold,
+                TextAlignmentOptions.MidlineLeft, 30);
+
+            LiftoffUIHelper.CreateButton("Load Bidding Ad", content, () =>
+            {
+                SavePlacement(placementInput);
+                string markup = markupInput != null ? markupInput.text : "";
+                OnLoadBiddingClicked(markup);
+            });
+
+            LiftoffUIHelper.CreateSpacer(content, 4);
+
+            LiftoffUIHelper.CreateButton("Is Ad Playable?", content, () =>
+            {
+                SavePlacement(placementInput);
+                OnIsAdPlayableClicked();
+            }, color: new Color(0.27f, 0.27f, 0.32f));
+
+            LiftoffUIHelper.CreateSpacer(content, 4);
+
+            LiftoffUIHelper.CreateButton("Play Bidding Ad", content, () =>
+            {
+                SavePlacement(placementInput);
+                string markup = markupInput != null ? markupInput.text : "";
+                OnPlayBiddingClicked(markup);
+            }, color: new Color(0.18f, 0.62f, 0.34f));
+
+            LiftoffUIHelper.CreateSpacer(content, 6);
+
+            BuildLogArea(content, 250);
         }
 
         // ---- Action Handlers ----
@@ -352,6 +400,16 @@ namespace Liftoff.Windows
             LogUI($"[Liftoff] PlayAd('{placement}') called.");
         }
 
+        void OnIsAdPlayableClicked()
+        {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            bool playable = LiftoffWindows.IsAdPlayable(placement);
+            LogUI($"[Liftoff] IsAdPlayable('{placement}'): {playable}");
+#else
+            LogUI("[Liftoff] IsAdPlayable: not supported on this platform.");
+#endif
+        }
+
         void OnGetSuperTokenClicked(TextMeshProUGUI tokenDisplay)
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
@@ -371,6 +429,28 @@ namespace Liftoff.Windows
             if (tokenDisplay != null)
                 tokenDisplay.text = "(Not supported on this platform)";
 #endif
+        }
+
+        void OnLoadBiddingClicked(string markup)
+        {
+            if (string.IsNullOrWhiteSpace(markup))
+            {
+                LogUI("[Liftoff] Bidding markup is empty. Paste the auction response first.");
+                return;
+            }
+            LiftoffWindows.LoadAd(placement, markup);
+            LogUI($"[Liftoff] LoadAd('{placement}', markup[{markup.Length}]) called.");
+        }
+
+        void OnPlayBiddingClicked(string markup)
+        {
+            if (string.IsNullOrWhiteSpace(markup))
+            {
+                LogUI("[Liftoff] Bidding markup is empty. Paste the auction response first.");
+                return;
+            }
+            LiftoffWindows.PlayAd(placement, markup);
+            LogUI($"[Liftoff] PlayAd('{placement}', markup[{markup.Length}]) called.");
         }
 
         void SetPrivacy(string label, Action action)

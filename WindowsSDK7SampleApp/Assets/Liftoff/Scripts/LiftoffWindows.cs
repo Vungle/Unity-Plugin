@@ -118,6 +118,11 @@ namespace Liftoff.Windows
             // Super Token
             [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
             public static extern IntPtr Liftoff_GetSuperToken(string placement);
+
+            // Ad state
+            [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.I1)]
+            public static extern bool Liftoff_IsAdPlayable(string placement);
         }
 
         // AOT-stable delegate instances to static methods
@@ -322,6 +327,16 @@ namespace Liftoff.Windows
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
             Native.Liftoff_SetDisableAshwidTracking(disabled);
+#endif
+        }
+
+        // Ad state
+        public static bool IsAdPlayable(string placement)
+        {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            return Native.Liftoff_IsAdPlayable(placement);
+#else
+            return false;
 #endif
         }
 

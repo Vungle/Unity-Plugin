@@ -75,3 +75,6 @@ LIFTOFF_API void __stdcall Liftoff_SetDisableAshwidTracking(bool disabled);
 
 // Super Token
 LIFTOFF_API const wchar_t* __stdcall Liftoff_GetSuperToken(const wchar_t* placementW);
+
+// Ad state
+LIFTOFF_API bool __stdcall Liftoff_IsAdPlayable(const wchar_t* placementW);

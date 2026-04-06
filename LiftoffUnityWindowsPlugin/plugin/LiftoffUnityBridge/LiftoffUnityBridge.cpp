@@ -612,3 +612,25 @@ LIFTOFF_API const wchar_t* __stdcall Liftoff_GetSuperToken(const wchar_t* placem
         return nullptr;
     }
 }
+
+// ---- Ad State ----
+LIFTOFF_API bool __stdcall Liftoff_IsAdPlayable(const wchar_t* placementW)
+{
+    LiftoffAds* inst = g_sdkInstance.load(std::memory_order_acquire);
+    if (!inst) return false;
+
+    try {
+        std::string placement = WToUtf8(std::wstring(placementW ? placementW : L""));
+        return inst->IsAdPlayable(placement);
+    }
+    catch (const std::exception& ex) {
+        OutputDebugStringA("[LiftoffBridge] IsAdPlayable: ");
+        OutputDebugStringA(ex.what());
+        OutputDebugStringA("\n");
+        return false;
+    }
+    catch (...) {
+        OutputDebugStringA("[LiftoffBridge] IsAdPlayable: unknown exception\n");
+        return false;
+    }
+}
