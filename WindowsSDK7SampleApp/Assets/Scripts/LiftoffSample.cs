@@ -216,14 +216,6 @@ namespace Liftoff.Windows
                 OnPlayClicked();
             }, color: new Color(0.18f, 0.62f, 0.34f));
 
-            LiftoffUIHelper.CreateSpacer(content, 4);
-
-            LiftoffUIHelper.CreateButton("Is Ad Playable?", content, () =>
-            {
-                SavePlacement(placementInput);
-                OnIsAdPlayableClicked();
-            }, color: new Color(0.27f, 0.27f, 0.32f));
-
             LiftoffUIHelper.CreateSpacer(content, 12);
 
             BuildLogArea(content);
@@ -342,14 +334,6 @@ namespace Liftoff.Windows
 
             LiftoffUIHelper.CreateSpacer(content, 4);
 
-            LiftoffUIHelper.CreateButton("Is Ad Playable?", content, () =>
-            {
-                SavePlacement(placementInput);
-                OnIsAdPlayableClicked();
-            }, color: new Color(0.27f, 0.27f, 0.32f));
-
-            LiftoffUIHelper.CreateSpacer(content, 4);
-
             LiftoffUIHelper.CreateButton("Play Bidding Ad", content, () =>
             {
                 SavePlacement(placementInput);
@@ -398,16 +382,6 @@ namespace Liftoff.Windows
         {
             LiftoffWindows.PlayAd(placement);
             LogUI($"[Liftoff] PlayAd('{placement}') called.");
-        }
-
-        void OnIsAdPlayableClicked()
-        {
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-            bool playable = LiftoffWindows.IsAdPlayable(placement);
-            LogUI($"[Liftoff] IsAdPlayable('{placement}'): {playable}");
-#else
-            LogUI("[Liftoff] IsAdPlayable: not supported on this platform.");
-#endif
         }
 
         void OnGetSuperTokenClicked(TextMeshProUGUI tokenDisplay)
