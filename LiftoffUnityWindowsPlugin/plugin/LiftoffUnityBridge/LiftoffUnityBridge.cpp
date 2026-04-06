@@ -581,3 +581,34 @@ LIFTOFF_API void __stdcall Liftoff_SetDisableAshwidTracking(bool disabled)
     catch (const std::exception& ex) { OutputDebugStringA("[LiftoffBridge] SetDisableAshwidTracking: "); OutputDebugStringA(ex.what()); OutputDebugStringA("\n"); }
     catch (...) { OutputDebugStringA("[LiftoffBridge] SetDisableAshwidTracking: unknown exception\n"); }
 }
+
+// ---- Super Token ----
+LIFTOFF_API const wchar_t* __stdcall Liftoff_GetSuperToken(const wchar_t* placementW)
+{
+    LiftoffAds* inst = g_sdkInstance.load(std::memory_order_acquire);
+    if (!inst) return nullptr;
+
+    try {
+        std::string placement = WToUtf8(std::wstring(placementW ? placementW : L""));
+        std::string token = inst->GetMediationSuperToken(placement);
+        if (token.empty()) return nullptr;
+
+        std::wstring wtoken = Utf8ToW(token);
+        size_t byteLen = (wtoken.size() + 1) * sizeof(wchar_t);
+        wchar_t* result = static_cast<wchar_t*>(CoTaskMemAlloc(byteLen));
+        if (result) {
+            wcscpy_s(result, wtoken.size() + 1, wtoken.c_str());
+        }
+        return result;
+    }
+    catch (const std::exception& ex) {
+        OutputDebugStringA("[LiftoffBridge] GetSuperToken: ");
+        OutputDebugStringA(ex.what());
+        OutputDebugStringA("\n");
+        return nullptr;
+    }
+    catch (...) {
+        OutputDebugStringA("[LiftoffBridge] GetSuperToken: unknown exception\n");
+        return nullptr;
+    }
+}

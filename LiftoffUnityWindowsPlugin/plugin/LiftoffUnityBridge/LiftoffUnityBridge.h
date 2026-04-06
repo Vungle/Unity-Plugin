@@ -72,3 +72,6 @@ LIFTOFF_API void __stdcall Liftoff_SetCoppaStatus(bool status);
 LIFTOFF_API void __stdcall Liftoff_SetCcpaStatus(int status);
 LIFTOFF_API void __stdcall Liftoff_SetGdprConsentStatus(int status, const wchar_t* version);
 LIFTOFF_API void __stdcall Liftoff_SetDisableAshwidTracking(bool disabled);
+
+// Super Token
+LIFTOFF_API const wchar_t* __stdcall Liftoff_GetSuperToken(const wchar_t* placementW);

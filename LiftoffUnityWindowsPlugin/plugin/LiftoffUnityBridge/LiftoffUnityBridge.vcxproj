@@ -92,6 +92,11 @@
       <AdditionalLibraryDirectories>$(SolutionDir)..\SDK\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>$(SolutionDir)..\SDK\$(Platform)\$(Configuration)\LiftoffSDK.Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(TargetPath)" "$(ProjectDir)..\..\..\Packages\com.liftoff.windows-ads\Runtime\Plugins\x86_64\$(TargetFileName)"
+copy /Y "$(TargetPath)" "$(ProjectDir)..\..\..\WindowsSDK7SampleApp\Assets\Liftoff\Plugins\x86_64\$(TargetFileName)"</Command>
+      <Message>Copying $(TargetFileName) to Packages and SampleApp...</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="LiftoffUnityBridge.h" />

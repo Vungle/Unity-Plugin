@@ -114,6 +114,10 @@ namespace Liftoff.Windows
 
             [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall)]
             internal static extern void Liftoff_SetDisableAshwidTracking([MarshalAs(UnmanagedType.I1)] bool disabled);
+
+            // Super Token
+            [DllImport("LiftoffUnityBridge", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Unicode)]
+            public static extern IntPtr Liftoff_GetSuperToken(string placement);
         }
 
         // AOT-stable delegate instances to static methods
@@ -130,7 +134,7 @@ namespace Liftoff.Windows
 
         static bool _callbacksInstalled;
 
-        // Trampolines — static, attributed, no captures
+        // Trampolines ï¿½ static, attributed, no captures
         [MonoPInvokeCallback(typeof(Native.InitSuccessCB))]
         static void InitOkTrampoline() =>
             LiftoffMainThread.Post(() => OnInitialized?.Invoke());
@@ -318,6 +322,29 @@ namespace Liftoff.Windows
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
             Native.Liftoff_SetDisableAshwidTracking(disabled);
+#endif
+        }
+
+        // Super Token
+        public static string GetSuperToken(string placement)
+        {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            try
+            {
+                IntPtr ptr = Native.Liftoff_GetSuperToken(placement);
+                if (ptr == IntPtr.Zero) return null;
+                string result = Marshal.PtrToStringUni(ptr);
+                Marshal.FreeCoTaskMem(ptr);
+                return result;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("[Liftoff] GetSuperToken: " + e.Message);
+                return null;
+            }
+#else
+            Debug.Log("[Liftoff] GetSuperToken: non-Windows platform (no-op).");
+            return null;
 #endif
         }
     }
