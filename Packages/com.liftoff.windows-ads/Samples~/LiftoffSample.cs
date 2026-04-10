@@ -1,6 +1,5 @@
 // LiftoffSample.cs (demo/driver)
 using System;
-using System.Collections;
 using System.Runtime.InteropServices;
 using UnityEngine;
 using TMPro;
@@ -23,25 +22,42 @@ namespace Liftoff.Windows
 
         void OnEnable()
         {
-            LiftoffWindows.OnInitialized += () =>
-            {
-                LogUI("[Liftoff] Initialized (event).");
-            };
-            LiftoffWindows.OnInitializationFailed += (c, m) => LogUI($"[Liftoff] Init failed {c}: {m}");
-            LiftoffWindows.OnAdLoaded += p => { LogUI($"[Liftoff] Loaded: {p}"); };
-            LiftoffWindows.OnAdLoadFailed += (p, c, m) => LogUI($"[Liftoff] Load fail {p}: {c} {m}");
-            LiftoffWindows.OnAdStart += (p, eid) => LogUI($"[Liftoff] Start {p} eid={eid}");
-            LiftoffWindows.OnAdEnd += p => LogUI($"[Liftoff] End {p}");
-            LiftoffWindows.OnAdPlayFailed += (p, c, m) => LogUI($"[Liftoff] Play fail {p}: {c} {m}");
-            LiftoffWindows.OnAdRewarded += p => LogUI($"[Liftoff] Rewarded {p}");
-            LiftoffWindows.OnAdClick += p => LogUI($"[Liftoff] Click {p}");
-            LiftoffWindows.OnDiagnostic += (lvl, sender, msg) => LogUI($"[{lvl}] {sender}: {msg}");
+            LiftoffWindows.OnInitialized += OnSdkInitialized;
+            LiftoffWindows.OnInitializationFailed += OnSdkInitFailed;
+            LiftoffWindows.OnAdLoaded += OnSdkAdLoaded;
+            LiftoffWindows.OnAdLoadFailed += OnSdkAdLoadFailed;
+            LiftoffWindows.OnAdStart += OnSdkAdStart;
+            LiftoffWindows.OnAdEnd += OnSdkAdEnd;
+            LiftoffWindows.OnAdPlayFailed += OnSdkAdPlayFailed;
+            LiftoffWindows.OnAdRewarded += OnSdkAdRewarded;
+            LiftoffWindows.OnAdClick += OnSdkAdClick;
+            LiftoffWindows.OnDiagnostic += OnSdkDiagnostic;
         }
 
         void OnDisable()
         {
-            LiftoffWindows.OnDiagnostic -= (lvl, s, m) => { };
+            LiftoffWindows.OnInitialized -= OnSdkInitialized;
+            LiftoffWindows.OnInitializationFailed -= OnSdkInitFailed;
+            LiftoffWindows.OnAdLoaded -= OnSdkAdLoaded;
+            LiftoffWindows.OnAdLoadFailed -= OnSdkAdLoadFailed;
+            LiftoffWindows.OnAdStart -= OnSdkAdStart;
+            LiftoffWindows.OnAdEnd -= OnSdkAdEnd;
+            LiftoffWindows.OnAdPlayFailed -= OnSdkAdPlayFailed;
+            LiftoffWindows.OnAdRewarded -= OnSdkAdRewarded;
+            LiftoffWindows.OnAdClick -= OnSdkAdClick;
+            LiftoffWindows.OnDiagnostic -= OnSdkDiagnostic;
         }
+
+        void OnSdkInitialized() => LogUI("[Liftoff] Initialized (event).");
+        void OnSdkInitFailed(int code, string msg) => LogUI($"[Liftoff] Init failed {code}: {msg}");
+        void OnSdkAdLoaded(string p) => LogUI($"[Liftoff] Loaded: {p}");
+        void OnSdkAdLoadFailed(string p, int code, string msg) => LogUI($"[Liftoff] Load fail {p}: {code} {msg}");
+        void OnSdkAdStart(string p, string eid) => LogUI($"[Liftoff] Start {p} eid={eid}");
+        void OnSdkAdEnd(string p) => LogUI($"[Liftoff] End {p}");
+        void OnSdkAdPlayFailed(string p, int code, string msg) => LogUI($"[Liftoff] Play fail {p}: {code} {msg}");
+        void OnSdkAdRewarded(string p) => LogUI($"[Liftoff] Rewarded {p}");
+        void OnSdkAdClick(string p) => LogUI($"[Liftoff] Click {p}");
+        void OnSdkDiagnostic(int lvl, string sender, string msg) => LogUI($"[{lvl}] {sender}: {msg}");
 
         void LogUI(string msg)
         {
@@ -68,19 +84,12 @@ namespace Liftoff.Windows
 
         public void OnLoadClicked()
         {
-            if (text != null) text.text = string.Empty;
             LiftoffWindows.LoadAd(placement);
             LogUI($"[Liftoff] LoadAd('{placement}') called");
         }
 
         public void OnPlayClicked()
         {
-            StartCoroutine(PlayNextFrame());
-        }
-
-        IEnumerator PlayNextFrame()
-        {
-            yield return null; // next frame on main thread
             LiftoffWindows.PlayAd(placement);
             LogUI($"[Liftoff] PlayAd('{placement}') called");
         }

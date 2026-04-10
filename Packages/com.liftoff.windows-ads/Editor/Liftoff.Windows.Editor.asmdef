@@ -1,8 +1,12 @@
 {
-    "name": "Liftoff.Windows",
+    "name": "Liftoff.Windows.Editor",
     "rootNamespace": "Liftoff.Windows",
-    "references": [],
-    "includePlatforms": [],
+    "references": [
+        "Liftoff.Windows"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

@@ -71,10 +71,12 @@ namespace Liftoff.Windows
         {
             Debug.Log(msg);
             logContent += msg + "\n";
+            // Cap log to prevent unbounded string growth and layout cost.
+            if (logContent.Length > 10000)
+                logContent = logContent.Substring(logContent.Length - 8000);
             if (logText != null)
             {
                 logText.text = logContent;
-                Canvas.ForceUpdateCanvases();
                 if (logScroll != null) logScroll.normalizedPosition = Vector2.zero;
             }
         }

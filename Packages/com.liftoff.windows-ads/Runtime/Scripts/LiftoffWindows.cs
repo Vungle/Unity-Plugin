@@ -135,45 +135,63 @@ namespace Liftoff.Windows
 
         static bool _callbacksInstalled;
 
-        // Trampolines � static, attributed, no captures
+        // Test injection point: when set, public methods route through this
+        // instead of the Native P/Invoke layer.
+        internal static INativeBridge TestBridge { get; set; }
+
+        internal static void ResetForTesting(INativeBridge bridge)
+        {
+            TestBridge = bridge;
+            _callbacksInstalled = true;
+            ClearAllEvents();
+        }
+
+        internal static void RestoreAfterTesting()
+        {
+            TestBridge = null;
+            _callbacksInstalled = false;
+            ClearAllEvents();
+        }
+
+        // Trampolines -- static, attributed, no captures (internal for test access)
         [MonoPInvokeCallback(typeof(Native.InitSuccessCB))]
-        static void InitOkTrampoline() =>
+        internal static void InitOkTrampoline() =>
             LiftoffMainThread.Post(() => OnInitialized?.Invoke());
 
         [MonoPInvokeCallback(typeof(Native.InitFailureCB))]
-        static void InitFailTrampoline(int code, string message) =>
+        internal static void InitFailTrampoline(int code, string message) =>
             LiftoffMainThread.Post(() => OnInitializationFailed?.Invoke(code, message));
 
         [MonoPInvokeCallback(typeof(Native.AdLoadSuccessCB))]
-        static void LoadOkTrampoline(string placement) =>
+        internal static void LoadOkTrampoline(string placement) =>
             LiftoffMainThread.Post(() => OnAdLoaded?.Invoke(placement));
 
         [MonoPInvokeCallback(typeof(Native.AdLoadFailureCB))]
-        static void LoadFailTrampoline(string placement, int code, string message) =>
+        internal static void LoadFailTrampoline(string placement, int code, string message) =>
             LiftoffMainThread.Post(() => OnAdLoadFailed?.Invoke(placement, code, message));
 
         [MonoPInvokeCallback(typeof(Native.AdStartCB))]
-        static void AdStartTrampoline(string placement, string eventId) =>
+        internal static void AdStartTrampoline(string placement, string eventId) =>
             LiftoffMainThread.Post(() => OnAdStart?.Invoke(placement, eventId));
 
         [MonoPInvokeCallback(typeof(Native.AdEndCB))]
-        static void AdEndTrampoline(string placement) =>
+        internal static void AdEndTrampoline(string placement) =>
             LiftoffMainThread.Post(() => OnAdEnd?.Invoke(placement));
 
         [MonoPInvokeCallback(typeof(Native.AdPlayFailureCB))]
-        static void AdPlayFailTrampoline(string placement, int code, string message) =>
+        internal static void AdPlayFailTrampoline(string placement, int code, string message) =>
             LiftoffMainThread.Post(() => OnAdPlayFailed?.Invoke(placement, code, message));
 
         [MonoPInvokeCallback(typeof(Native.AdRewardedCB))]
-        static void AdRewardedTrampoline(string placement) =>
+        internal static void AdRewardedTrampoline(string placement) =>
             LiftoffMainThread.Post(() => OnAdRewarded?.Invoke(placement));
 
         [MonoPInvokeCallback(typeof(Native.AdClickCB))]
-        static void AdClickTrampoline(string placement) =>
+        internal static void AdClickTrampoline(string placement) =>
             LiftoffMainThread.Post(() => OnAdClick?.Invoke(placement));
 
         [MonoPInvokeCallback(typeof(Native.DiagnosticCB))]
-        static void DiagnosticTrampoline(int level, string senderType, string message) =>
+        internal static void DiagnosticTrampoline(int level, string senderType, string message) =>
             LiftoffMainThread.Post(() => OnDiagnostic?.Invoke(level, senderType, message));
 
         static LiftoffWindows()
@@ -212,6 +230,12 @@ namespace Liftoff.Windows
         public static void Initialize(string appId, IntPtr hwnd)
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            if (!_callbacksInstalled)
+            {
+                Debug.LogWarning("[Liftoff] Native bridge not available. Ensure LiftoffUnityBridge.dll is present.");
+                return;
+            }
+            if (TestBridge != null) { TestBridge.Initialize(appId, hwnd); return; }
             bool initialReply = Native.Liftoff_Initialize(appId, hwnd);
             Debug.LogFormat("Liftoff Initialization called with result {0}", initialReply);
 #else
@@ -224,6 +248,8 @@ namespace Liftoff.Windows
             get
             {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+                if (!_callbacksInstalled) return false;
+                if (TestBridge != null) return TestBridge.IsInitialized();
                 return Native.Liftoff_IsInitialized();
 #else
                 return false;
@@ -234,6 +260,19 @@ namespace Liftoff.Windows
         public static void LoadAd(string placement, string biddingMarkup = null)
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            if (!_callbacksInstalled)
+            {
+                Debug.LogWarning("[Liftoff] Native bridge not available. Ensure LiftoffUnityBridge.dll is present.");
+                return;
+            }
+            if (TestBridge != null)
+            {
+                if (string.IsNullOrWhiteSpace(biddingMarkup))
+                    TestBridge.LoadAd(placement);
+                else
+                    TestBridge.LoadAdWithMarkup(placement, biddingMarkup);
+                return;
+            }
             if (string.IsNullOrWhiteSpace(biddingMarkup))
             {
                 bool waterfallReply = Native.Liftoff_LoadAd(placement);
@@ -250,6 +289,19 @@ namespace Liftoff.Windows
         public static void PlayAd(string placement, string biddingMarkup = null)
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            if (!_callbacksInstalled)
+            {
+                Debug.LogWarning("[Liftoff] Native bridge not available. Ensure LiftoffUnityBridge.dll is present.");
+                return;
+            }
+            if (TestBridge != null)
+            {
+                if (string.IsNullOrWhiteSpace(biddingMarkup))
+                    TestBridge.PlayAd(placement);
+                else
+                    TestBridge.PlayAdWithMarkup(placement, biddingMarkup);
+                return;
+            }
             if (string.IsNullOrWhiteSpace(biddingMarkup))
             {
                 bool waterfallReply = Native.Liftoff_PlayAd(placement);
@@ -266,6 +318,8 @@ namespace Liftoff.Windows
         public static bool IsWebView2Available()
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            if (!_callbacksInstalled) return false;
+            if (TestBridge != null) return TestBridge.IsWebView2Available();
             return Native.Liftoff_IsWebView2Available();
 #else
             return false;
@@ -275,29 +329,40 @@ namespace Liftoff.Windows
         public static void Shutdown()
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-            try { Native.Liftoff_ClearDiagnosticCallback(); } catch { }
-
-            if (_callbacksInstalled)
+            if (TestBridge != null) { TestBridge.Shutdown(); }
+            else
             {
-                try
-                {
-                    Native.BridgeCallbacks zero = default;
-                    Native.Liftoff_SetCallbacks(zero);
-                }
-                catch { /* ignore */ }
-                _callbacksInstalled = false;
+                // Native Liftoff_Shutdown() clears callbacks and diagnostics internally,
+                // so no separate ClearDiagnosticCallback/SetCallbacks(zero) calls needed.
+                try { Native.Liftoff_Shutdown(); } catch { }
             }
-
-            try { Native.Liftoff_Shutdown(); } catch { }
 #else
             // no-op elsewhere
 #endif
+
+            ClearAllEvents();
+        }
+
+        static void ClearAllEvents()
+        {
+            OnInitialized = null;
+            OnInitializationFailed = null;
+            OnAdLoaded = null;
+            OnAdLoadFailed = null;
+            OnAdStart = null;
+            OnAdEnd = null;
+            OnAdPlayFailed = null;
+            OnAdRewarded = null;
+            OnAdClick = null;
+            OnDiagnostic = null;
         }
 
         // COPPA
         public static void SetCoppaStatus(bool isUserCoppa)
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            if (!_callbacksInstalled) return;
+            if (TestBridge != null) { TestBridge.SetCoppaStatus(isUserCoppa); return; }
             Native.Liftoff_SetCoppaStatus(isUserCoppa);
 #endif
         }
@@ -306,6 +371,8 @@ namespace Liftoff.Windows
         public static void SetCcpaStatus(bool optIn)
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            if (!_callbacksInstalled) return;
+            if (TestBridge != null) { TestBridge.SetCcpaStatus(optIn ? 1 : 2); return; }
             Native.Liftoff_SetCcpaStatus(optIn ? 1 : 2);
 #endif
         }
@@ -314,6 +381,8 @@ namespace Liftoff.Windows
         public static void SetGdprConsentStatus(bool optIn, string messageVersion = "")
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            if (!_callbacksInstalled) return;
+            if (TestBridge != null) { TestBridge.SetGdprConsentStatus(optIn ? 1 : 2, messageVersion ?? string.Empty); return; }
             Native.Liftoff_SetGdprConsentStatus(optIn ? 1 : 2, messageVersion ?? string.Empty);
 #endif
         }
@@ -322,6 +391,8 @@ namespace Liftoff.Windows
         public static void SetDisableAshwidTracking(bool disabled)
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            if (!_callbacksInstalled) return;
+            if (TestBridge != null) { TestBridge.SetDisableAshwidTracking(disabled); return; }
             Native.Liftoff_SetDisableAshwidTracking(disabled);
 #endif
         }
@@ -330,6 +401,19 @@ namespace Liftoff.Windows
         public static string GetSuperToken(string placement)
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            if (!_callbacksInstalled)
+            {
+                Debug.LogWarning("[Liftoff] Native bridge not available. Ensure LiftoffUnityBridge.dll is present.");
+                return null;
+            }
+            if (TestBridge != null)
+            {
+                IntPtr tptr = TestBridge.GetSuperToken(placement);
+                if (tptr == IntPtr.Zero) return null;
+                string tresult = Marshal.PtrToStringUni(tptr);
+                Marshal.FreeCoTaskMem(tptr);
+                return tresult;
+            }
             try
             {
                 IntPtr ptr = Native.Liftoff_GetSuperToken(placement);
