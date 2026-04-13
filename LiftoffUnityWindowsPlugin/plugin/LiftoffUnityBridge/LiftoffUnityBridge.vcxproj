@@ -70,8 +70,8 @@
       <AdditionalDependencies>$(SolutionDir)..\SDK\$(Platform)\$(Configuration)\LiftoffSDK.Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(TargetPath)" "$(ProjectDir)..\..\..\Packages\com.liftoff.windows-ads\Runtime\Plugins\x86_64\$(Configuration)\$(TargetFileName)"
-copy /Y "$(TargetPath)" "$(ProjectDir)..\..\..\WindowsSDK7SampleApp\Assets\Liftoff\Plugins\x86_64\$(Configuration)\$(TargetFileName)"</Command>
+      <Command>copy /Y "$(TargetPath)" "$(ProjectDir)..\..\..\Packages\com.liftoff.windows-ads\Runtime\Plugins\x86_64\$(TargetFileName)"
+copy /Y "$(TargetPath)" "$(ProjectDir)..\..\..\WindowsSDK7SampleApp\Assets\Liftoff\Plugins\x86_64\$(TargetFileName)"</Command>
       <Message>Copying $(Configuration) $(TargetFileName) to Packages and SampleApp...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -98,8 +98,8 @@ copy /Y "$(TargetPath)" "$(ProjectDir)..\..\..\WindowsSDK7SampleApp\Assets\Lifto
       <AdditionalDependencies>$(SolutionDir)..\SDK\$(Platform)\$(Configuration)\LiftoffSDK.Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(TargetPath)" "$(ProjectDir)..\..\..\Packages\com.liftoff.windows-ads\Runtime\Plugins\x86_64\$(Configuration)\$(TargetFileName)"
-copy /Y "$(TargetPath)" "$(ProjectDir)..\..\..\WindowsSDK7SampleApp\Assets\Liftoff\Plugins\x86_64\$(Configuration)\$(TargetFileName)"</Command>
+      <Command>copy /Y "$(TargetPath)" "$(ProjectDir)..\..\..\Packages\com.liftoff.windows-ads\Runtime\Plugins\x86_64\$(TargetFileName)"
+copy /Y "$(TargetPath)" "$(ProjectDir)..\..\..\WindowsSDK7SampleApp\Assets\Liftoff\Plugins\x86_64\$(TargetFileName)"</Command>
       <Message>Copying $(Configuration) $(TargetFileName) to Packages and SampleApp...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
