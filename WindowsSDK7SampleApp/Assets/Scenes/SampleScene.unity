@@ -199,8 +199,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 591a570a90d091840851bd7374cac264, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
+  appId: 5797949864c72d066f000097
+  placement: MAHDEFA10231
+  text: {fileID: 739945791}
 --- !u!1 &95691422
 GameObject:
   m_ObjectHideFlags: 0
