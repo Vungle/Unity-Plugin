@@ -42,9 +42,9 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <RepoRoot>$([System.IO.Path]::GetFullPath('$(ProjectDir)..\..\..'))\</RepoRoot>
-    <PkgPluginDir>$(RepoRoot)Packages\com.liftoff.windows-ads\Runtime\Plugins\x86_64\</PkgPluginDir>
-    <SamplePluginDir>$(RepoRoot)WindowsSDK7SampleApp\Assets\Liftoff\Plugins\x86_64\</SamplePluginDir>
+    <RepoRoot>$([System.IO.Path]::GetFullPath('$(ProjectDir)..\..\..'))</RepoRoot>
+    <PkgPluginDir>$(RepoRoot)\Packages\com.liftoff.windows-ads\Runtime\Plugins\x86_64</PkgPluginDir>
+    <SamplePluginDir>$(RepoRoot)\WindowsSDK7SampleApp\Assets\Liftoff\Plugins\x86_64</SamplePluginDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir)\..\SDK\include;$(IncludePath)</IncludePath>
@@ -75,8 +75,10 @@
       <AdditionalDependencies>$(SolutionDir)..\SDK\$(Platform)\$(Configuration)\LiftoffSDK.Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(TargetPath)" "$(PkgPluginDir)$(TargetFileName)"
-copy /Y "$(TargetPath)" "$(SamplePluginDir)$(TargetFileName)"</Command>
+      <Command>if not exist "$(PkgPluginDir)" mkdir "$(PkgPluginDir)"
+copy /Y "$(TargetPath)" "$(PkgPluginDir)\$(TargetFileName)"
+if not exist "$(SamplePluginDir)" mkdir "$(SamplePluginDir)"
+copy /Y "$(TargetPath)" "$(SamplePluginDir)\$(TargetFileName)"</Command>
       <Message>Copying $(Configuration) $(TargetFileName) to Packages and SampleApp...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -103,8 +105,10 @@ copy /Y "$(TargetPath)" "$(SamplePluginDir)$(TargetFileName)"</Command>
       <AdditionalDependencies>$(SolutionDir)..\SDK\$(Platform)\$(Configuration)\LiftoffSDK.Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(TargetPath)" "$(PkgPluginDir)$(TargetFileName)"
-copy /Y "$(TargetPath)" "$(SamplePluginDir)$(TargetFileName)"</Command>
+      <Command>if not exist "$(PkgPluginDir)" mkdir "$(PkgPluginDir)"
+copy /Y "$(TargetPath)" "$(PkgPluginDir)\$(TargetFileName)"
+if not exist "$(SamplePluginDir)" mkdir "$(SamplePluginDir)"
+copy /Y "$(TargetPath)" "$(SamplePluginDir)\$(TargetFileName)"</Command>
       <Message>Copying $(Configuration) $(TargetFileName) to Packages and SampleApp...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
