@@ -70,7 +70,9 @@
       <AdditionalDependencies>$(SolutionDir)..\SDK\$(Platform)\$(Configuration)\LiftoffSDK.Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(TargetPath)" "$(ProjectDir)..\..\..\Packages\com.liftoff.windows-ads\Runtime\Plugins\x86_64\$(TargetFileName)"
+      <Command>if not exist "$(ProjectDir)..\..\..\Packages\com.liftoff.windows-ads\Runtime\Plugins\x86_64\" mkdir "$(ProjectDir)..\..\..\Packages\com.liftoff.windows-ads\Runtime\Plugins\x86_64\"
+copy /Y "$(TargetPath)" "$(ProjectDir)..\..\..\Packages\com.liftoff.windows-ads\Runtime\Plugins\x86_64\$(TargetFileName)"
+if not exist "$(ProjectDir)..\..\..\WindowsSDK7SampleApp\Assets\Liftoff\Plugins\x86_64\" mkdir "$(ProjectDir)..\..\..\WindowsSDK7SampleApp\Assets\Liftoff\Plugins\x86_64\"
 copy /Y "$(TargetPath)" "$(ProjectDir)..\..\..\WindowsSDK7SampleApp\Assets\Liftoff\Plugins\x86_64\$(TargetFileName)"</Command>
       <Message>Copying $(Configuration) $(TargetFileName) to Packages and SampleApp...</Message>
     </PostBuildEvent>
@@ -98,7 +100,9 @@ copy /Y "$(TargetPath)" "$(ProjectDir)..\..\..\WindowsSDK7SampleApp\Assets\Lifto
       <AdditionalDependencies>$(SolutionDir)..\SDK\$(Platform)\$(Configuration)\LiftoffSDK.Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(TargetPath)" "$(ProjectDir)..\..\..\Packages\com.liftoff.windows-ads\Runtime\Plugins\x86_64\$(TargetFileName)"
+      <Command>if not exist "$(ProjectDir)..\..\..\Packages\com.liftoff.windows-ads\Runtime\Plugins\x86_64\" mkdir "$(ProjectDir)..\..\..\Packages\com.liftoff.windows-ads\Runtime\Plugins\x86_64\"
+copy /Y "$(TargetPath)" "$(ProjectDir)..\..\..\Packages\com.liftoff.windows-ads\Runtime\Plugins\x86_64\$(TargetFileName)"
+if not exist "$(ProjectDir)..\..\..\WindowsSDK7SampleApp\Assets\Liftoff\Plugins\x86_64\" mkdir "$(ProjectDir)..\..\..\WindowsSDK7SampleApp\Assets\Liftoff\Plugins\x86_64\"
 copy /Y "$(TargetPath)" "$(ProjectDir)..\..\..\WindowsSDK7SampleApp\Assets\Liftoff\Plugins\x86_64\$(TargetFileName)"</Command>
       <Message>Copying $(Configuration) $(TargetFileName) to Packages and SampleApp...</Message>
     </PostBuildEvent>
