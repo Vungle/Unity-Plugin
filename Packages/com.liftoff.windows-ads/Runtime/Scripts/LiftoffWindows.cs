@@ -135,25 +135,7 @@ namespace Liftoff.Windows
 
         static bool _callbacksInstalled;
 
-        // Test injection point: when set, public methods route through this
-        // instead of the Native P/Invoke layer.
-        internal static INativeBridge TestBridge { get; set; }
-
-        internal static void ResetForTesting(INativeBridge bridge)
-        {
-            TestBridge = bridge;
-            _callbacksInstalled = true;
-            ClearAllEvents();
-        }
-
-        internal static void RestoreAfterTesting()
-        {
-            TestBridge = null;
-            _callbacksInstalled = false;
-            ClearAllEvents();
-        }
-
-        // Trampolines -- static, attributed, no captures (internal for test access)
+        // Trampolines -- static, attributed, no captures
         [MonoPInvokeCallback(typeof(Native.InitSuccessCB))]
         internal static void InitOkTrampoline() =>
             LiftoffMainThread.Post(() => OnInitialized?.Invoke());
@@ -235,7 +217,6 @@ namespace Liftoff.Windows
                 Debug.LogWarning("[Liftoff] Native bridge not available. Ensure LiftoffUnityBridge.dll is present.");
                 return;
             }
-            if (TestBridge != null) { TestBridge.Initialize(appId, hwnd); return; }
             bool initialReply = Native.Liftoff_Initialize(appId, hwnd);
             Debug.LogFormat("Liftoff Initialization called with result {0}", initialReply);
 #else
@@ -249,7 +230,6 @@ namespace Liftoff.Windows
             {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
                 if (!_callbacksInstalled) return false;
-                if (TestBridge != null) return TestBridge.IsInitialized();
                 return Native.Liftoff_IsInitialized();
 #else
                 return false;
@@ -263,14 +243,6 @@ namespace Liftoff.Windows
             if (!_callbacksInstalled)
             {
                 Debug.LogWarning("[Liftoff] Native bridge not available. Ensure LiftoffUnityBridge.dll is present.");
-                return;
-            }
-            if (TestBridge != null)
-            {
-                if (string.IsNullOrWhiteSpace(biddingMarkup))
-                    TestBridge.LoadAd(placement);
-                else
-                    TestBridge.LoadAdWithMarkup(placement, biddingMarkup);
                 return;
             }
             if (string.IsNullOrWhiteSpace(biddingMarkup))
@@ -294,14 +266,6 @@ namespace Liftoff.Windows
                 Debug.LogWarning("[Liftoff] Native bridge not available. Ensure LiftoffUnityBridge.dll is present.");
                 return;
             }
-            if (TestBridge != null)
-            {
-                if (string.IsNullOrWhiteSpace(biddingMarkup))
-                    TestBridge.PlayAd(placement);
-                else
-                    TestBridge.PlayAdWithMarkup(placement, biddingMarkup);
-                return;
-            }
             if (string.IsNullOrWhiteSpace(biddingMarkup))
             {
                 bool waterfallReply = Native.Liftoff_PlayAd(placement);
@@ -319,7 +283,6 @@ namespace Liftoff.Windows
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
             if (!_callbacksInstalled) return false;
-            if (TestBridge != null) return TestBridge.IsWebView2Available();
             return Native.Liftoff_IsWebView2Available();
 #else
             return false;
@@ -329,13 +292,9 @@ namespace Liftoff.Windows
         public static void Shutdown()
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-            if (TestBridge != null) { TestBridge.Shutdown(); }
-            else
-            {
-                // Native Liftoff_Shutdown() clears callbacks and diagnostics internally,
-                // so no separate ClearDiagnosticCallback/SetCallbacks(zero) calls needed.
-                try { Native.Liftoff_Shutdown(); } catch { }
-            }
+            // Native Liftoff_Shutdown() clears callbacks and diagnostics internally,
+            // so no separate ClearDiagnosticCallback/SetCallbacks(zero) calls needed.
+            try { Native.Liftoff_Shutdown(); } catch { }
 #else
             // no-op elsewhere
 #endif
@@ -362,7 +321,6 @@ namespace Liftoff.Windows
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
             if (!_callbacksInstalled) return;
-            if (TestBridge != null) { TestBridge.SetCoppaStatus(isUserCoppa); return; }
             Native.Liftoff_SetCoppaStatus(isUserCoppa);
 #endif
         }
@@ -372,7 +330,6 @@ namespace Liftoff.Windows
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
             if (!_callbacksInstalled) return;
-            if (TestBridge != null) { TestBridge.SetCcpaStatus(optIn ? 1 : 2); return; }
             Native.Liftoff_SetCcpaStatus(optIn ? 1 : 2);
 #endif
         }
@@ -382,7 +339,6 @@ namespace Liftoff.Windows
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
             if (!_callbacksInstalled) return;
-            if (TestBridge != null) { TestBridge.SetGdprConsentStatus(optIn ? 1 : 2, messageVersion ?? string.Empty); return; }
             Native.Liftoff_SetGdprConsentStatus(optIn ? 1 : 2, messageVersion ?? string.Empty);
 #endif
         }
@@ -392,7 +348,6 @@ namespace Liftoff.Windows
         {
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
             if (!_callbacksInstalled) return;
-            if (TestBridge != null) { TestBridge.SetDisableAshwidTracking(disabled); return; }
             Native.Liftoff_SetDisableAshwidTracking(disabled);
 #endif
         }
@@ -405,14 +360,6 @@ namespace Liftoff.Windows
             {
                 Debug.LogWarning("[Liftoff] Native bridge not available. Ensure LiftoffUnityBridge.dll is present.");
                 return null;
-            }
-            if (TestBridge != null)
-            {
-                IntPtr tptr = TestBridge.GetSuperToken(placement);
-                if (tptr == IntPtr.Zero) return null;
-                string tresult = Marshal.PtrToStringUni(tptr);
-                Marshal.FreeCoTaskMem(tptr);
-                return tresult;
             }
             try
             {

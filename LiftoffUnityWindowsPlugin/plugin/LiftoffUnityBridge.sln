@@ -4,8 +4,6 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LiftoffUnityBridge", "LiftoffUnityBridge\LiftoffUnityBridge.vcxproj", "{A0E6B8E3-BA90-46F2-9A9C-7F2EA5F2D3AA}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LiftoffUnityBridge.Tests", "LiftoffUnityBridge.Tests\LiftoffUnityBridge.Tests.vcxproj", "{B1F2C3D4-E5F6-7890-ABCD-EF1234567890}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -16,9 +14,5 @@ Global
 		{A0E6B8E3-BA90-46F2-9A9C-7F2EA5F2D3AA}.Debug|x64.Build.0 = Debug|x64
 		{A0E6B8E3-BA90-46F2-9A9C-7F2EA5F2D3AA}.Release|x64.ActiveCfg = Release|x64
 		{A0E6B8E3-BA90-46F2-9A9C-7F2EA5F2D3AA}.Release|x64.Build.0 = Release|x64
-		{B1F2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|x64.ActiveCfg = Debug|x64
-		{B1F2C3D4-E5F6-7890-ABCD-EF1234567890}.Debug|x64.Build.0 = Debug|x64
-		{B1F2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|x64.ActiveCfg = Release|x64
-		{B1F2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 EndGlobal
