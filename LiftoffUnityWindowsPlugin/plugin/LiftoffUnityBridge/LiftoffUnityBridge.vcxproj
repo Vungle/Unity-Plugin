@@ -75,8 +75,8 @@
       <AdditionalDependencies>$(SolutionDir)..\SDK\$(Platform)\$(Configuration)\LiftoffSDK.Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /I "$(TargetPath)" "$(PkgPluginDir)"
-xcopy /Y /I "$(TargetPath)" "$(SamplePluginDir)"</Command>
+      <Command>copy /Y "$(TargetPath)" "$(PkgPluginDir)$(TargetFileName)"
+copy /Y "$(TargetPath)" "$(SamplePluginDir)$(TargetFileName)"</Command>
       <Message>Copying $(Configuration) $(TargetFileName) to Packages and SampleApp...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -103,8 +103,8 @@ xcopy /Y /I "$(TargetPath)" "$(SamplePluginDir)"</Command>
       <AdditionalDependencies>$(SolutionDir)..\SDK\$(Platform)\$(Configuration)\LiftoffSDK.Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /I "$(TargetPath)" "$(PkgPluginDir)"
-xcopy /Y /I "$(TargetPath)" "$(SamplePluginDir)"</Command>
+      <Command>copy /Y "$(TargetPath)" "$(PkgPluginDir)$(TargetFileName)"
+copy /Y "$(TargetPath)" "$(SamplePluginDir)$(TargetFileName)"</Command>
       <Message>Copying $(Configuration) $(TargetFileName) to Packages and SampleApp...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
