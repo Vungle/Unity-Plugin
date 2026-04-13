@@ -41,6 +41,11 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <RepoRoot>$([System.IO.Path]::GetFullPath('$(ProjectDir)..\..\..'))\</RepoRoot>
+    <PkgPluginDir>$(RepoRoot)Packages\com.liftoff.windows-ads\Runtime\Plugins\x86_64\</PkgPluginDir>
+    <SamplePluginDir>$(RepoRoot)WindowsSDK7SampleApp\Assets\Liftoff\Plugins\x86_64\</SamplePluginDir>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir)\..\SDK\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)..\SDK\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
@@ -70,8 +75,8 @@
       <AdditionalDependencies>$(SolutionDir)..\SDK\$(Platform)\$(Configuration)\LiftoffSDK.Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /I "$(TargetPath)" "$(ProjectDir)..\..\..\Packages\com.liftoff.windows-ads\Runtime\Plugins\x86_64\"
-xcopy /Y /I "$(TargetPath)" "$(ProjectDir)..\..\..\WindowsSDK7SampleApp\Assets\Liftoff\Plugins\x86_64\"</Command>
+      <Command>xcopy /Y /I "$(TargetPath)" "$(PkgPluginDir)"
+xcopy /Y /I "$(TargetPath)" "$(SamplePluginDir)"</Command>
       <Message>Copying $(Configuration) $(TargetFileName) to Packages and SampleApp...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -98,8 +103,8 @@ xcopy /Y /I "$(TargetPath)" "$(ProjectDir)..\..\..\WindowsSDK7SampleApp\Assets\L
       <AdditionalDependencies>$(SolutionDir)..\SDK\$(Platform)\$(Configuration)\LiftoffSDK.Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /I "$(TargetPath)" "$(ProjectDir)..\..\..\Packages\com.liftoff.windows-ads\Runtime\Plugins\x86_64\"
-xcopy /Y /I "$(TargetPath)" "$(ProjectDir)..\..\..\WindowsSDK7SampleApp\Assets\Liftoff\Plugins\x86_64\"</Command>
+      <Command>xcopy /Y /I "$(TargetPath)" "$(PkgPluginDir)"
+xcopy /Y /I "$(TargetPath)" "$(SamplePluginDir)"</Command>
       <Message>Copying $(Configuration) $(TargetFileName) to Packages and SampleApp...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
