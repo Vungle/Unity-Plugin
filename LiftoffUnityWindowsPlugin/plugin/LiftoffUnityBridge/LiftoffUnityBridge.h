@@ -75,3 +75,11 @@ LIFTOFF_API void __stdcall Liftoff_SetDisableAshwidTracking(bool disabled);
 
 // Super Token
 LIFTOFF_API const wchar_t* __stdcall Liftoff_GetSuperToken(const wchar_t* placementW);
+
+// Raw SDK instance access (UNSUPPORTED — see documentation)
+// Returns the underlying LiftoffAds* as an opaque void*.
+// WARNING: The pointer has NO lifetime guarantees. It can become dangling
+// at any time if Shutdown() is called or a new Initialize() cycle starts.
+// The caller is responsible for all thread-safety; the bridge's internal
+// mutex does NOT protect uses of this pointer.
+LIFTOFF_API void* __stdcall Liftoff_GetSdkInstance();

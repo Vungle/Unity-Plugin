@@ -722,3 +722,15 @@ LIFTOFF_API const wchar_t* __stdcall Liftoff_GetSuperToken(const wchar_t* placem
         return nullptr;
     }
 }
+
+// ---- Raw SDK instance (UNSUPPORTED) ----
+LIFTOFF_API void* __stdcall Liftoff_GetSdkInstance()
+{
+    OutputDebugStringA(
+        "[LiftoffBridge] WARNING: Liftoff_GetSdkInstance() called. "
+        "This is UNSUPPORTED. The returned pointer has no lifetime guarantees "
+        "and may become invalid at any time (Shutdown, re-Initialize). "
+        "The caller assumes all responsibility for thread-safety and pointer validity.\n");
+
+    return static_cast<void*>(g_sdkInstance.load(std::memory_order_acquire));
+}
