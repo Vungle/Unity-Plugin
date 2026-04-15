@@ -1,9 +1,7 @@
 {
     "name": "Liftoff.Windows",
     "rootNamespace": "Liftoff.Windows",
-    "references": [
-        ""
-    ],
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

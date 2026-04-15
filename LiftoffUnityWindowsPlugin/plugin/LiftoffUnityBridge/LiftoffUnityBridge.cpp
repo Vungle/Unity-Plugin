@@ -4,9 +4,12 @@
 #include <Windows.h>
 #include <combaseapi.h>
 #include <atomic>
+#include <chrono>
+#include <condition_variable>
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <thread>
 
@@ -15,18 +18,26 @@
 #include "EventArguments/DiagnosticLogEvent.h"
 #include "LiftoffAdPlayInfo.h"
 
-using namespace std;
 
 // --------- SDK globals / state ----------
 static std::atomic<LiftoffAds*> g_sdkInstance{ nullptr };
 static std::atomic<bool>        g_initialized{ false };
 static std::atomic<bool>        g_initSuccessSignaled{ false };
+static std::atomic<bool>        g_shuttingDown{ false };
 
 static BridgeCallbacks          g_cbs{};
 static std::mutex               g_cbsMutex;
+static std::shared_mutex        g_instanceMutex;  // guards g_sdkInstance usage lifetime
 
 // Keep init callback alive for lifetime of SDK
 static std::shared_ptr<InitializationCallback> g_initCb;
+
+// Init thread tracking for safe shutdown
+static std::thread              g_initThread;
+static std::mutex               g_initThreadMutex;
+static std::atomic<uint64_t>    g_initGeneration{ 0 };
+static std::atomic<bool>        g_initThreadDone{ true };
+static std::condition_variable  g_initThreadCV;
 
 // --------- Diagnostics state ------------
 static DiagnosticCB g_diagCb = nullptr;
@@ -37,6 +48,7 @@ static bool g_diagRegistered = false;
 // --------- Host window (Editor HWND fallback) --------
 static HWND g_hostWnd = nullptr;
 static ATOM g_hostClass = 0;
+static DWORD g_hostWndThreadId = 0;
 
 static BridgeCallbacks GetCallbacksSnapshot() {
     std::lock_guard<std::mutex> lock(g_cbsMutex);
@@ -82,14 +94,22 @@ static HWND EnsureHostWindow() {
         hInst,
         nullptr
     );
+    if (g_hostWnd) g_hostWndThreadId = GetCurrentThreadId();
 
     return g_hostWnd;
 }
 
 static void DestroyHostWindow() {
     if (g_hostWnd) {
-        DestroyWindow(g_hostWnd);
+        if (GetCurrentThreadId() == g_hostWndThreadId) {
+            DestroyWindow(g_hostWnd);
+        } else {
+            // DestroyWindow must be called from the thread that created the window.
+            // Post WM_CLOSE so the owning thread's message pump handles it.
+            PostMessageW(g_hostWnd, WM_CLOSE, 0, 0);
+        }
         g_hostWnd = nullptr;
+        g_hostWndThreadId = 0;
     }
     // Leaving the class registered is fine and avoids reload issues.
 }
@@ -126,13 +146,19 @@ static void SignalInitSuccessIfReady() {
     }
 }
 
-// Register diag listener with SDK (only once, only after init)
+// Register diag listener with SDK (only once, only after init).
+// We copy the forwarder under the lock, then register outside the lock
+// to avoid deadlock if AddDiagnosticListener fires a callback synchronously
+// (the callback would call GetDiagSnapshot() which also locks g_diagMutex).
 static void RegisterDiagnosticsIfNeeded() {
-    std::lock_guard<std::mutex> lock(g_diagMutex);
-    if (!g_diagRegistered && g_diagForwarder) {
-        LiftoffAds::AddDiagnosticListener(g_diagForwarder);
+    std::function<void(const DiagnosticLogEvent)> forwarderCopy;
+    {
+        std::lock_guard<std::mutex> lock(g_diagMutex);
+        if (g_diagRegistered || !g_diagForwarder) return;
+        forwarderCopy = g_diagForwarder;
         g_diagRegistered = true;
     }
+    LiftoffAds::AddDiagnosticListener(forwarderCopy);
 }
 
 // --------- Bridge API -------------------
@@ -158,12 +184,21 @@ LIFTOFF_API bool __stdcall Liftoff_Initialize(const wchar_t* appIdW, void* hwnd)
         // Keep initialization callback alive
         g_initCb = std::make_shared<InitializationCallback>();
 
-        g_initCb->OnInitializationSuccess = [](InitializationSuccessEventArgs /*args*/) {
+        // Capture generation before setting up callbacks so they can detect
+        // whether Shutdown (or a newer Initialize) has invalidated this cycle.
+        g_shuttingDown.store(false, std::memory_order_release);
+        uint64_t gen = g_initGeneration.load(std::memory_order_acquire);
+
+        g_initCb->OnInitializationSuccess = [gen](InitializationSuccessEventArgs /*args*/) {
+            if (g_shuttingDown.load(std::memory_order_acquire)) return;
+            if (g_initGeneration.load(std::memory_order_acquire) != gen) return;
             g_initialized.store(true, std::memory_order_release);
             SignalInitSuccessIfReady();
             };
 
-        g_initCb->OnInitializationFailure = [](InitializationFailureEventArgs args) {
+        g_initCb->OnInitializationFailure = [gen](InitializationFailureEventArgs args) {
+            if (g_shuttingDown.load(std::memory_order_acquire)) return;
+            if (g_initGeneration.load(std::memory_order_acquire) != gen) return;
             std::wstring wmsg = Utf8ToW(args.ErrorMessage);
             auto cbs = GetCallbacksSnapshot();
             if (cbs.initFailure) {
@@ -174,21 +209,65 @@ LIFTOFF_API bool __stdcall Liftoff_Initialize(const wchar_t* appIdW, void* hwnd)
         // Kick off async init
         auto fut = LiftoffAds::InitializeAsync(appId, hWnd, *g_initCb);
 
-        std::thread([f = std::move(fut)]() mutable {
-            try {
-                if (auto* inst = f.get()) {
-                    g_sdkInstance.store(inst, std::memory_order_release);
-                    if (g_initialized.load(std::memory_order_acquire)) {
-                        SignalInitSuccessIfReady();
-                    }
+        {
+            std::unique_lock<std::mutex> tlock(g_initThreadMutex);
+            if (g_initThread.joinable()) {
+                bool done = g_initThreadCV.wait_for(tlock, std::chrono::seconds(2), [] {
+                    return g_initThreadDone.load(std::memory_order_acquire);
+                });
+                if (done) g_initThread.join();
+                else {
+                    OutputDebugStringA("[LiftoffBridge] Previous init thread did not finish in time; detaching\n");
+                    g_initThread.detach();
                 }
             }
-            catch (...) {
-                // failure should have been signaled via callback (if SDK does that)
-            }
-            }).detach();
+            g_initThreadDone.store(false, std::memory_order_release);
+            g_initThread = std::thread([f = std::move(fut), gen]() mutable {
+                struct OnExit {
+                    ~OnExit() {
+                        {
+                            std::lock_guard<std::mutex> lk(g_initThreadMutex);
+                            g_initThreadDone.store(true, std::memory_order_release);
+                        }
+                        g_initThreadCV.notify_one();
+                    }
+                } onExit;
+                try {
+                    if (auto* inst = f.get()) {
+                        // Discard result if Shutdown was called or a newer
+                        // Initialize has started since this thread launched.
+                        if (g_shuttingDown.load(std::memory_order_acquire)) return;
+                        {
+                            // Exclusive lock makes the generation check and store
+                            // atomic w.r.t. Shutdown and other init threads,
+                            // preventing TOCTOU races on g_sdkInstance.
+                            std::unique_lock<std::shared_mutex> wlock(g_instanceMutex);
+                            if (g_initGeneration.load(std::memory_order_acquire) != gen) return;
+                            g_sdkInstance.store(inst, std::memory_order_release);
+                        }
+                        if (g_initialized.load(std::memory_order_acquire)) {
+                            SignalInitSuccessIfReady();
+                        }
+                    }
+                }
+                catch (const std::exception& ex) {
+                    OutputDebugStringA("[LiftoffBridge] Init thread exception: ");
+                    OutputDebugStringA(ex.what());
+                    OutputDebugStringA("\n");
+                }
+                catch (...) {
+                    OutputDebugStringA("[LiftoffBridge] Init thread unknown exception\n");
+                }
+            });
+        }
 
         return true;
+    }
+    catch (const std::exception& ex) {
+        auto cbs = GetCallbacksSnapshot();
+        std::wstring wmsg = Utf8ToW(ex.what());
+        if (cbs.initFailure) cbs.initFailure(0, wmsg.empty() ? L"Exception during Initialize" : wmsg.c_str());
+        return false;
     }
     catch (...) {
         auto cbs = GetCallbacksSnapshot();
@@ -203,6 +282,7 @@ LIFTOFF_API bool __stdcall Liftoff_IsInitialized() {
 }
 
 LIFTOFF_API bool __stdcall Liftoff_LoadAd(const wchar_t* placementW) {
+    std::shared_lock<std::shared_mutex> rlock(g_instanceMutex);
     LiftoffAds* inst = g_sdkInstance.load(std::memory_order_acquire);
     if (!inst) {
         auto cbs = GetCallbacksSnapshot();
@@ -214,14 +294,14 @@ LIFTOFF_API bool __stdcall Liftoff_LoadAd(const wchar_t* placementW) {
         std::wstring placementWStr = std::wstring(placementW ? placementW : L"");
         std::string placement = WToUtf8(placementWStr);
 
-        auto cb = std::make_shared<AdLoadCallback>();
+        AdLoadCallback cb;
 
-        cb->OnAdLoadSuccess = [](AdLoadEventArgs args) {
+        cb.OnAdLoadSuccess = [](AdLoadEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             if (cbs.loadSuccess) cbs.loadSuccess(Utf8ToW(args.Placement).c_str());
             };
 
-        cb->OnAdLoadFailure = [](AdLoadEventArgs args) {
+        cb.OnAdLoadFailure = [](AdLoadEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             std::wstring wplacement = Utf8ToW(args.Placement);
             std::wstring wmsg = Utf8ToW(args.ErrorMessage);
@@ -230,7 +310,7 @@ LIFTOFF_API bool __stdcall Liftoff_LoadAd(const wchar_t* placementW) {
             }
             };
 
-        bool kicked = inst->LoadAd(placement, *cb);
+        bool kicked = inst->LoadAd(placement, cb);
         if (!kicked) {
             auto cbs = GetCallbacksSnapshot();
             if (cbs.loadFailure) cbs.loadFailure(placementWStr.c_str(), 1, L"LoadAd returned false");
@@ -250,6 +330,7 @@ LIFTOFF_API bool __stdcall Liftoff_LoadAd(const wchar_t* placementW) {
 }
 
 LIFTOFF_API bool __stdcall Liftoff_PlayAd(const wchar_t* placementW) {
+    std::shared_lock<std::shared_mutex> rlock(g_instanceMutex);
     LiftoffAds* inst = g_sdkInstance.load(std::memory_order_acquire);
     if (!inst) {
         auto cbs = GetCallbacksSnapshot();
@@ -261,19 +342,19 @@ LIFTOFF_API bool __stdcall Liftoff_PlayAd(const wchar_t* placementW) {
         std::wstring placementWStr = std::wstring(placementW ? placementW : L"");
         std::string placement = WToUtf8(placementWStr);
 
-        auto pcb = std::make_shared<AdPlayCallback>();
+        AdPlayCallback pcb;
 
-        pcb->OnAdStart = [](const AdPlayEventArgs args) {
+        pcb.OnAdStart = [](const AdPlayEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             if (cbs.adStart) cbs.adStart(Utf8ToW(args.Placement).c_str(), Utf8ToW(args.EventID).c_str());
             };
 
-        pcb->OnAdEnd = [](const AdPlayEventArgs args) {
+        pcb.OnAdEnd = [](const AdPlayEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             if (cbs.adEnd) cbs.adEnd(Utf8ToW(args.Placement).c_str());
             };
 
-        pcb->OnAdPlayFailure = [](const AdPlayEventArgs args) {
+        pcb.OnAdPlayFailure = [](const AdPlayEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             std::wstring wplacement = Utf8ToW(args.Placement);
             std::wstring wmsg = Utf8ToW(args.ErrorMessage);
@@ -282,17 +363,17 @@ LIFTOFF_API bool __stdcall Liftoff_PlayAd(const wchar_t* placementW) {
             }
             };
 
-        pcb->OnAdPlayRewarded = [](const AdPlayEventArgs args) {
+        pcb.OnAdPlayRewarded = [](const AdPlayEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             if (cbs.adRewarded) cbs.adRewarded(Utf8ToW(args.Placement).c_str());
             };
 
-        pcb->OnAdPlayClick = [](const AdPlayEventArgs args) {
+        pcb.OnAdPlayClick = [](const AdPlayEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             if (cbs.adClick) cbs.adClick(Utf8ToW(args.Placement).c_str());
             };
 
-        LiftoffAdPlayInfo info = inst->PlayAd(placement, *pcb, AdConfig());
+        LiftoffAdPlayInfo info = inst->PlayAd(placement, pcb, AdConfig());
 
         if (!info.Success) {
             auto cbs = GetCallbacksSnapshot();
@@ -312,20 +393,52 @@ LIFTOFF_API bool __stdcall Liftoff_PlayAd(const wchar_t* placementW) {
     }
     catch (...) {
         auto cbs = GetCallbacksSnapshot();
-        if (cbs.adPlayFailure) cbs.adPlayFailure(L"", -1, L"Exception during PlayAd");
+        if (cbs.adPlayFailure) cbs.adPlayFailure(L"", 2, L"Exception during PlayAd");
         return false;
     }
 }
 
 LIFTOFF_API void __stdcall Liftoff_Shutdown() {
+    // Signal the init thread to abort if still running
+    g_shuttingDown.store(true, std::memory_order_release);
+    // Bump generation so any in-flight init thread discards its result,
+    // even if a new Initialize resets g_shuttingDown before the thread checks.
+    g_initGeneration.fetch_add(1, std::memory_order_acq_rel);
+
+    // Wait up to 2 seconds for the init thread to finish.  If it hasn't
+    // completed by then (e.g. the SDK's InitializeAsync is hung), detach
+    // to avoid blocking the Unity main thread indefinitely.  The
+    // g_shuttingDown flag ensures the thread discards its result even if
+    // it finishes after we've moved on.
+    {
+        std::unique_lock<std::mutex> tlock(g_initThreadMutex);
+        if (g_initThread.joinable()) {
+            bool done = g_initThreadCV.wait_for(tlock, std::chrono::seconds(2), [] {
+                return g_initThreadDone.load(std::memory_order_acquire);
+            });
+            if (done) g_initThread.join();
+            else {
+                OutputDebugStringA("[LiftoffBridge] Init thread did not finish in time; detaching\n");
+                g_initThread.detach();
+            }
+        }
+    }
+
+    // Copy forwarder under lock, then remove outside lock to avoid
+    // deadlock if RemoveDiagnosticListener fires a synchronous callback
+    // (the forwarder calls GetDiagSnapshot() which also locks g_diagMutex).
+    std::function<void(const DiagnosticLogEvent)> diagToRemove;
     {
         std::lock_guard<std::mutex> lock(g_diagMutex);
         if (g_diagRegistered && g_diagForwarder) {
-            LiftoffAds::RemoveDiagnosticListener(g_diagForwarder);
+            diagToRemove = g_diagForwarder;
             g_diagRegistered = false;
         }
         g_diagForwarder = nullptr;
         g_diagCb = nullptr;
+    }
+    if (diagToRemove) {
+        LiftoffAds::RemoveDiagnosticListener(diagToRemove);
     }
 
     {
@@ -333,10 +446,22 @@ LIFTOFF_API void __stdcall Liftoff_Shutdown() {
         g_cbs = BridgeCallbacks{};
     }
 
-    g_sdkInstance.store(nullptr, std::memory_order_release);
+    // Exclusive lock prevents any in-flight LoadAd/PlayAd/GetSuperToken
+    // from using a dangling g_sdkInstance pointer after we null it.
+    {
+        std::unique_lock<std::shared_mutex> wlock(g_instanceMutex);
+        g_sdkInstance.store(nullptr, std::memory_order_release);
+    }
     g_initialized.store(false, std::memory_order_release);
     g_initSuccessSignaled.store(false, std::memory_order_release);
-    g_initCb.reset();
+
+    // Init thread has been joined or detached.  If detached, g_shuttingDown
+    // ensures it won't store into g_sdkInstance.  Protect g_initCb under
+    // g_initThreadMutex for consistency with Initialize.
+    {
+        std::lock_guard<std::mutex> tlock(g_initThreadMutex);
+        g_initCb.reset();
+    }
 
     DestroyHostWindow();
 }
@@ -344,6 +469,7 @@ LIFTOFF_API void __stdcall Liftoff_Shutdown() {
 LIFTOFF_API bool __stdcall Liftoff_LoadAd_WithMarkup(const wchar_t* placementW,
     const wchar_t* headerBiddingMarkupW)
 {
+    std::shared_lock<std::shared_mutex> rlock(g_instanceMutex);
     LiftoffAds* inst = g_sdkInstance.load(std::memory_order_acquire);
     if (!inst) {
         auto cbs = GetCallbacksSnapshot();
@@ -358,24 +484,21 @@ LIFTOFF_API bool __stdcall Liftoff_LoadAd_WithMarkup(const wchar_t* placementW,
         const std::string placement = WToUtf8(placementWStr);
         const std::string markup = WToUtf8(markupWStr);
 
-        auto cb = std::make_shared<AdLoadCallback>();
-        std::weak_ptr<AdLoadCallback> weak = cb;
+        AdLoadCallback cb;
 
-        cb->OnAdLoadSuccess = [weak](AdLoadEventArgs args) {
-            if (!weak.lock()) return;
+        cb.OnAdLoadSuccess = [](AdLoadEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             if (cbs.loadSuccess) cbs.loadSuccess(Utf8ToW(args.Placement).c_str());
             };
 
-        cb->OnAdLoadFailure = [weak](AdLoadEventArgs args) {
-            if (!weak.lock()) return;
+        cb.OnAdLoadFailure = [](AdLoadEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             std::wstring wplacement = Utf8ToW(args.Placement);
             std::wstring wmsg = Utf8ToW(args.ErrorMessage);
             if (cbs.loadFailure) cbs.loadFailure(wplacement.c_str(), 1, wmsg.empty() ? L"Load failed" : wmsg.c_str());
             };
 
-        bool kicked = inst->LoadMediatedAd(placement, *cb, markup);
+        bool kicked = inst->LoadMediatedAd(placement, cb, markup);
         if (!kicked) {
             auto cbs = GetCallbacksSnapshot();
             if (cbs.loadFailure) cbs.loadFailure(placementWStr.c_str(), 1, L"LoadMediatedAd returned false");
@@ -397,6 +520,7 @@ LIFTOFF_API bool __stdcall Liftoff_LoadAd_WithMarkup(const wchar_t* placementW,
 LIFTOFF_API bool __stdcall Liftoff_PlayAd_WithMarkup(const wchar_t* placementW,
     const wchar_t* headerBiddingMarkupW)
 {
+    std::shared_lock<std::shared_mutex> rlock(g_instanceMutex);
     LiftoffAds* inst = g_sdkInstance.load(std::memory_order_acquire);
     if (!inst) {
         auto cbs = GetCallbacksSnapshot();
@@ -411,42 +535,36 @@ LIFTOFF_API bool __stdcall Liftoff_PlayAd_WithMarkup(const wchar_t* placementW,
         const std::string placement = WToUtf8(placementWStr);
         const std::string markup = WToUtf8(markupWStr);
 
-        auto pcb = std::make_shared<AdPlayCallback>();
-        std::weak_ptr<AdPlayCallback> weak = pcb;
+        AdPlayCallback pcb;
 
-        pcb->OnAdStart = [weak](const AdPlayEventArgs args) {
-            if (!weak.lock()) return;
+        pcb.OnAdStart = [](const AdPlayEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             if (cbs.adStart) cbs.adStart(Utf8ToW(args.Placement).c_str(), Utf8ToW(args.EventID).c_str());
             };
 
-        pcb->OnAdEnd = [weak](const AdPlayEventArgs args) {
-            if (!weak.lock()) return;
+        pcb.OnAdEnd = [](const AdPlayEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             if (cbs.adEnd) cbs.adEnd(Utf8ToW(args.Placement).c_str());
             };
 
-        pcb->OnAdPlayFailure = [weak](const AdPlayEventArgs args) {
-            if (!weak.lock()) return;
+        pcb.OnAdPlayFailure = [](const AdPlayEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             std::wstring wplacement = Utf8ToW(args.Placement);
             std::wstring wmsg = Utf8ToW(args.ErrorMessage);
             if (cbs.adPlayFailure) cbs.adPlayFailure(wplacement.c_str(), 2, wmsg.empty() ? L"Play failed" : wmsg.c_str());
             };
 
-        pcb->OnAdPlayRewarded = [weak](const AdPlayEventArgs args) {
-            if (!weak.lock()) return;
+        pcb.OnAdPlayRewarded = [](const AdPlayEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             if (cbs.adRewarded) cbs.adRewarded(Utf8ToW(args.Placement).c_str());
             };
 
-        pcb->OnAdPlayClick = [weak](const AdPlayEventArgs args) {
-            if (!weak.lock()) return;
+        pcb.OnAdPlayClick = [](const AdPlayEventArgs args) {
             auto cbs = GetCallbacksSnapshot();
             if (cbs.adClick) cbs.adClick(Utf8ToW(args.Placement).c_str());
             };
 
-        LiftoffAdPlayInfo info = inst->PlayMediatedAd(AdConfig(), placement, *pcb, markup);
+        LiftoffAdPlayInfo info = inst->PlayMediatedAd(AdConfig(), placement, pcb, markup);
 
         if (!info.Success) {
             auto cbs = GetCallbacksSnapshot();
@@ -469,26 +587,30 @@ LIFTOFF_API bool __stdcall Liftoff_PlayAd_WithMarkup(const wchar_t* placementW,
     }
 }
 
-// ---- WebView2: availability check ----
+// ---- WebView2: availability check (cached) ----
+static std::atomic<int> g_webView2Cached{ -1 }; // -1 = unchecked, 0 = no, 1 = yes
+
 LIFTOFF_API bool __stdcall Liftoff_IsWebView2Available() {
+    int cached = g_webView2Cached.load(std::memory_order_acquire);
+    if (cached >= 0) return cached != 0;
+
     typedef HRESULT(WINAPI* GetVerFn)(PCWSTR, LPWSTR*);
-    HMODULE h = LoadLibraryW(L"WebView2Loader.dll");
-    if (!h) return false;
+    HMODULE h = LoadLibraryExW(L"WebView2Loader.dll", nullptr,
+        LOAD_LIBRARY_SEARCH_APPLICATION_DIR | LOAD_LIBRARY_SEARCH_SYSTEM32);
+    if (!h) { g_webView2Cached.store(0, std::memory_order_release); return false; }
 
     auto fn = reinterpret_cast<GetVerFn>(GetProcAddress(h, "GetAvailableCoreWebView2BrowserVersionString"));
-    if (!fn) { FreeLibrary(h); return false; }
+    if (!fn) { FreeLibrary(h); g_webView2Cached.store(0, std::memory_order_release); return false; }
 
     LPWSTR ver = nullptr;
     HRESULT hr = fn(nullptr, &ver);
 
-    if (SUCCEEDED(hr) && ver) {
-        CoTaskMemFree(ver);
-        FreeLibrary(h);
-        return true;
-    }
-
+    bool available = SUCCEEDED(hr) && ver;
+    if (ver) CoTaskMemFree(ver);
     FreeLibrary(h);
-    return false;
+
+    g_webView2Cached.store(available ? 1 : 0, std::memory_order_release);
+    return available;
 }
 
 // ---------------- Diagnostics bridge ----------------
@@ -511,38 +633,104 @@ LIFTOFF_API void __stdcall Liftoff_SetDiagnosticCallback(DiagnosticCB cb)
 
 LIFTOFF_API void __stdcall Liftoff_ClearDiagnosticCallback()
 {
-    std::lock_guard<std::mutex> lock(g_diagMutex);
-    if (g_diagRegistered && g_diagForwarder) {
-        LiftoffAds::RemoveDiagnosticListener(g_diagForwarder);
-        g_diagRegistered = false;
+    // Same pattern as Shutdown: copy under lock, remove outside lock
+    // to avoid deadlock if the SDK fires a synchronous callback.
+    std::function<void(const DiagnosticLogEvent)> forwarderCopy;
+    {
+        std::lock_guard<std::mutex> lock(g_diagMutex);
+        if (g_diagRegistered && g_diagForwarder) {
+            forwarderCopy = g_diagForwarder;
+            g_diagRegistered = false;
+        }
+        g_diagForwarder = nullptr;
+        g_diagCb = nullptr;
     }
-    g_diagForwarder = nullptr;
-    g_diagCb = nullptr;
+    if (forwarderCopy) {
+        LiftoffAds::RemoveDiagnosticListener(forwarderCopy);
+    }
 }
 
 // COPPA
 LIFTOFF_API void __stdcall Liftoff_SetCoppaStatus(bool status) {
     try { LiftoffAds::SetCoppaStatus(status); }
-    catch (...) {}
+    catch (const std::exception& ex) { OutputDebugStringA("[LiftoffBridge] SetCoppaStatus: "); OutputDebugStringA(ex.what()); OutputDebugStringA("\n"); }
+    catch (...) { OutputDebugStringA("[LiftoffBridge] SetCoppaStatus: unknown exception\n"); }
 }
 
-// CCPA
+// CCPA  (1 = OptedIn, 2 = OptedOut)
 LIFTOFF_API void __stdcall Liftoff_SetCcpaStatus(int status) {
-    try { LiftoffAds::SetCcpaStatus(static_cast<CcpaConsentStatus>(status)); }
-    catch (...) {}
+    try {
+        if (status < 1 || status > 2) {
+            OutputDebugStringA("[LiftoffBridge] SetCcpaStatus: invalid status (expected 1 or 2)\n");
+            return;
+        }
+        LiftoffAds::SetCcpaStatus(static_cast<CcpaConsentStatus>(status));
+    }
+    catch (const std::exception& ex) { OutputDebugStringA("[LiftoffBridge] SetCcpaStatus: "); OutputDebugStringA(ex.what()); OutputDebugStringA("\n"); }
+    catch (...) { OutputDebugStringA("[LiftoffBridge] SetCcpaStatus: unknown exception\n"); }
 }
 
-// GDPR
+// GDPR  (1 = ConsentAccepted, 2 = ConsentDenied)
 LIFTOFF_API void __stdcall Liftoff_SetGdprConsentStatus(int status, const wchar_t* versionW) {
     try {
+        if (status < 1 || status > 2) {
+            OutputDebugStringA("[LiftoffBridge] SetGdprConsentStatus: invalid status (expected 1 or 2)\n");
+            return;
+        }
         std::string version = WToUtf8(std::wstring(versionW ? versionW : L""));
         LiftoffAds::SetGdprConsentStatus(static_cast<GdprConsentStatus>(status), version);
     }
-    catch (...) {}
+    catch (const std::exception& ex) { OutputDebugStringA("[LiftoffBridge] SetGdprConsentStatus: "); OutputDebugStringA(ex.what()); OutputDebugStringA("\n"); }
+    catch (...) { OutputDebugStringA("[LiftoffBridge] SetGdprConsentStatus: unknown exception\n"); }
 }
 
 LIFTOFF_API void __stdcall Liftoff_SetDisableAshwidTracking(bool disabled)
 {
     try { LiftoffAds::SetDisableAshwidTracking(disabled); }
-    catch (...) {}
+    catch (const std::exception& ex) { OutputDebugStringA("[LiftoffBridge] SetDisableAshwidTracking: "); OutputDebugStringA(ex.what()); OutputDebugStringA("\n"); }
+    catch (...) { OutputDebugStringA("[LiftoffBridge] SetDisableAshwidTracking: unknown exception\n"); }
+}
+
+// ---- Super Token ----
+LIFTOFF_API const wchar_t* __stdcall Liftoff_GetSuperToken(const wchar_t* placementW)
+{
+    std::shared_lock<std::shared_mutex> rlock(g_instanceMutex);
+    LiftoffAds* inst = g_sdkInstance.load(std::memory_order_acquire);
+    if (!inst) return nullptr;
+
+    try {
+        std::string placement = WToUtf8(std::wstring(placementW ? placementW : L""));
+        std::string token = inst->GetMediationSuperToken(placement);
+        if (token.empty()) return nullptr;
+
+        std::wstring wtoken = Utf8ToW(token);
+        size_t byteLen = (wtoken.size() + 1) * sizeof(wchar_t);
+        wchar_t* result = static_cast<wchar_t*>(CoTaskMemAlloc(byteLen));
+        if (result) {
+            wcscpy_s(result, wtoken.size() + 1, wtoken.c_str());
+        }
+        return result;
+    }
+    catch (const std::exception& ex) {
+        OutputDebugStringA("[LiftoffBridge] GetSuperToken: ");
+        OutputDebugStringA(ex.what());
+        OutputDebugStringA("\n");
+        return nullptr;
+    }
+    catch (...) {
+        OutputDebugStringA("[LiftoffBridge] GetSuperToken: unknown exception\n");
+        return nullptr;
+    }
+}
+
+// ---- Raw SDK instance (UNSUPPORTED) ----
+LIFTOFF_API void* __stdcall Liftoff_GetSdkInstance()
+{
+    OutputDebugStringA(
+        "[LiftoffBridge] WARNING: Liftoff_GetSdkInstance() called. "
+        "This is UNSUPPORTED. The returned pointer has no lifetime guarantees "
+        "and may become invalid at any time (Shutdown, re-Initialize). "
+        "The caller assumes all responsibility for thread-safety and pointer validity.\n");
+
+    return static_cast<void*>(g_sdkInstance.load(std::memory_order_acquire));
 }

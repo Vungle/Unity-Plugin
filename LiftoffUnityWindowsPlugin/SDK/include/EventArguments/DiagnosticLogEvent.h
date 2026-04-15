@@ -28,16 +28,22 @@ public:
         oss << LevelToString(Level) << ' ' << SenderType << ' ' << Message << ' ';
 
         if (Exception) {
-            try {
-                std::rethrow_exception(Exception);
-            } catch (const std::exception& ex) {
-                oss << ex.what() << "\r\n";
-                for (auto currentException = std::current_exception(); currentException != nullptr; currentException = std::current_exception()) {
+            std::exception_ptr current = Exception;
+            while (current) {
+                try {
+                    std::rethrow_exception(current);
+                } catch (const std::exception& ex) {
+                    oss << ex.what() << "\r\n";
+                    // Walk nested_exception chain if present
                     try {
-                        std::rethrow_exception(currentException);
-                    } catch (const std::exception& innerEx) {
-                        oss << innerEx.what() << "\r\n";
+                        std::rethrow_if_nested(ex);
+                        current = nullptr;
+                    } catch (...) {
+                        current = std::current_exception();
                     }
+                } catch (...) {
+                    oss << "(unknown exception)\r\n";
+                    current = nullptr;
                 }
             }
         }
