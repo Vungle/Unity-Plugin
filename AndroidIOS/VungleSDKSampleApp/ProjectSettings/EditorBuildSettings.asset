@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Samples/Scenes/LaunchScene.unity
+    guid: 11223344556677881122334455667788
+  - enabled: 1
+    path: Assets/Samples/Scenes/BannerRectTransformScene.unity
+    guid: e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4
+  - enabled: 1
+    path: Assets/Samples/Scenes/BannerScene.unity
+    guid: 44556677889900114455667788990011
+  - enabled: 1
+    path: Assets/Samples/Scenes/DualBanner.unity
+    guid: 66778899001122336677889900112233
+  - enabled: 1
+    path: Assets/Samples/Scenes/DualNative.unity
+    guid: 77889900112233447788990011223344
+  - enabled: 1
+    path: Assets/Samples/Scenes/InterstitialScene.unity
+    guid: 22334455667788992233445566778899
+  - enabled: 1
+    path: Assets/Samples/Scenes/NativeScene.unity
+    guid: 55667788990011225566778899001122
+  - enabled: 1
+    path: Assets/Samples/Scenes/RewardedScene.unity
+    guid: 33445566778899003344556677889900
+  m_configObjects: {}
+  m_UseUCBPForAssetBundles: 0

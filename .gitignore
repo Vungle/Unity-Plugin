@@ -1,4 +1,5 @@
 .DS_Store
 
-!Packages/com.liftoff.windows-ads/Samples~/
-!Packages/com.liftoff.windows-ads/Samples~/**
+# Claude Code settings
+.claude/
+CLAUDE.local.md
