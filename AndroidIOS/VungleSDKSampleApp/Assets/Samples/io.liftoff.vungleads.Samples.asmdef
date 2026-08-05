@@ -1,0 +1,21 @@
+{
+    "name": "io.liftoff.vungleads.Samples",
+    "rootNamespace": "",
+    "references": [
+        "io.liftoff.vungleads.Runtime",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [
+        "Android",
+        "Editor",
+        "iOS"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

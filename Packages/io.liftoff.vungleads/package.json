@@ -1,0 +1,23 @@
+{
+    "name": "io.liftoff.vungleads",
+    "displayName":"Vungle SDK by Liftoff",
+    "version": "7.0.2",
+    "unity": "6000.0",
+    "unityRelease": "66f2",
+    "description": "Liftoff/Vungle Ads Unity plugin for Android and iOS. Supports interstitial, rewarded, banner, and native ad formats. Bundles native Android AARs and iOS Objective-C plugins; resolves the VungleAds SDK via External Dependency Manager (EDM4U).",
+    "author": {
+        "name": "Liftoff Monetize"
+    },
+    "license": "SEE LICENSE IN LICENSE.md",
+    "dependencies": {
+        "com.unity.ugui": "2.0.0",
+        "com.unity.external-dependency-manager": "2.0.0"
+    },
+    "samples": [
+        {
+            "displayName": "Vungle SDK Samples",
+            "description": "Example scenes and scripts for interstitial, rewarded, banner, and native ads.",
+            "path": "Samples~"
+        }
+    ]
+}

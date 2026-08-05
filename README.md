@@ -1,162 +1,21 @@
-# Vungle's Unity-Plugin
+# Liftoff Monetize (Vungle) Unity Plugin
 
-## Getting Started
-Please follow our [Getting Started for Unity Guide](https://support.vungle.com/hc/en-us/articles/360003455452) to complete the integration. Remember to get the Vungle App ID from the Vungle dashboard.
+Unity integration for the Liftoff/Vungle publisher SDKs. Windows and Android/iOS have separate architectures — Windows binds to a prebuilt native bridge DLL, while Android/iOS ship source glue compiled by Unity's per-platform build — so each platform family lives in its own folder with its own documentation.
 
-### Vungle Unity Plugin Requirements
-* Supports Unity 2017 and higher
+## Repository layout
 
-### Running the Vungle sample app
-To run our sample app, download our Unity Sample app. Create a new project in Unity. With Unity open and your project presented, double-click the included VungleSDK.unitypackage file to add the Vungle Unity Plugin to your application.
+| Folder | Description | Docs |
+| --- | --- | --- |
+| `Packages/com.liftoff.windows-ads/` | UPM package for **Windows** (Standalone x86_64). Ships the prebuilt bridge, vendor SDK, and WebView2 loader DLLs with C# bindings. | [Windows/README.md](Windows/README.md) |
+| `Packages/io.liftoff.vungleads/` | UPM package for **Android / iOS** (*Vungle SDK by Liftoff*). Java/Objective-C bridge source plus C# API; native SDK resolved via EDM4U. Developed in a private repository and also released on the Unity Asset Store. | [AndroidIOS/README.md](AndroidIOS/README.md) |
+| `Windows/` | Windows-specific sources: the C++ bridge (`LiftoffUnityWindowsPlugin/`, built with Visual Studio 2022) and the `WindowsSDK7SampleApp/` Unity test project. | [Windows/README.md](Windows/README.md) |
+| `AndroidIOS/` | Android/iOS test app (`VungleSDKSampleApp/`) built on the package's sample scenes for interstitial, rewarded, banner, and native formats. References `Packages/io.liftoff.vungleads` locally. | [AndroidIOS/README.md](AndroidIOS/README.md) |
 
-Click All to select everything before importing.
+## Getting started
 
-In Project window, navigate to the Assets Folder, check to see if this folder has all the files in your downloaded project Assets folder. If all these files are not in your Unity Assets folder then move them manually by right clicking on Assets folder in Unity and choose "open in finder", in the opened finder window copy and paste everything from the downloaded Sample app assets folder to your Unity project's Asset folder and replace the files if necessary.
-
-In Unity, project navigator->Assets doubleclick on MainTitleScreen.
-
-Click on GameObject, choose TitleGUI inside Inspector->Title GUI (Script). If the link is broken re-add the Title GUI script back to the GameObject. Attach the corresponding UI elements to the script if the links are broken.
-
-Press Command + Shift + B to open up Build Settings. Click on iOS, Android or Windows then hit Switch Platform.
-
-In the Build Settings window click on Player Settings. In Inspector, make sure Company Name, Product Name, Package Name are your own and correct values.
-
-## Release Notes
-
-#### VERSION 6.11.0.1 (July 13, 2022)
-* Integrated iOS Publisher SDK v6.11.0
-* Integrated Android Publisher SDK v6.11.0
-* Integrated Windows Publisher SDK v6.11.0
-
-#### VERSION 6.11.0.0 (May 5, 2022)
-* Integrated iOS Publisher SDK v6.11.0
-* Integrated Android Publisher SDK v6.11.0
-* Integrated Windows Publisher SDK v6.10.1
-
-#### VERSION 6.10.6.2 (March 10, 2022)
-* Integrated iOS Publisher SDK v6.10.6
-* Integrated Android Publisher SDK v6.10.5
-* Integrated Windows Publisher SDK v6.10.1
-
-#### VERSION 6.10.6.1 (February 9, 2022)
-* Integrated iOS Publisher SDK v6.10.6
-* Integrated Android Publisher SDK v6.10.4
-* Integrated Windows Publisher SDK v6.10.1
-
-#### VERSION 6.10.6.0 (February 1, 2022)
-* Integrated iOS Publisher SDK v6.10.6
-* Integrated Android Publisher SDK v6.10.3
-* Integrated Windows Publisher SDK v6.10.1
-
-#### VERSION 6.10.5.0 (December 9, 2021)
-* Integrated iOS Publisher SDK v6.10.5
-* Integrated Android Publisher SDK v6.10.3
-* Integrated Windows Publisher SDK v6.10.1
-
-#### VERSION 6.10.4.0 (November 16, 2021)
-* Integrated iOS Publisher SDK v6.10.4
-* Integrated Android Publisher SDK v6.10.2
-* Integrated Windows Publisher SDK v6.10.1
-
-#### VERSION 6.10.3.0 (September 28, 2021)
-* Integrated iOS Publisher SDK v6.10.3
-* Integrated Android Publisher SDK v6.10.2
-* Integrated Windows Publisher SDK v6.10.1
-
-#### VERSION 6.10.2.0 (September 8, 2021)
-* Integrated iOS Publisher SDK v6.10.1
-* Integrated Android Publisher SDK v6.10.2
-* Integrated Windows Publisher SDK v6.10.1
-
-#### VERSION 6.10.1.0 (August 12, 2021)
-* Integrated iOS Publisher SDK v6.10.1
-* Integrated Android Publisher SDK v6.10.1
-* Integrated Windows Publisher SDK v6.10.1
-
-#### VERSION 6.9.2.0 (April 14, 2021)
-* Integrated iOS Publisher SDK v6.9.2
-* Integrated Android Publisher SDK v6.9.1
-* Integrated Windows Publisher SDK v6.8.0
-
-#### VERSION 6.9.1.0
-* Integrated iOS Publisher SDK v6.9.1
-* Integrated Android Publisher SDK v6.9.1
-* Integrated Windows Publisher SDK v6.8.0
-
-#### VERSION 6.8.1.0
-* Integrated iOS Publisher SDK v6.8.1
-* Integrated Android Publisher SDK v6.8.1
-* Integrated Windows Publisher SDK v6.8.0
-
-#### VERSION 6.8.0.0
-* Integrated iOS Publisher SDK v6.8.0
-* Integrated Android Publisher SDK v6.8.0
-* Integrated Windows Publisher SDK v6.8.0
-
-#### VERSION 6.7.2.1
-* Integrated iOS Publisher SDK v6.7.1
-* Integrated Android Publisher SDK v6.7.1
-* Integrated Windows Publisher SDK v6.7.1
-
-#### VERSION 6.7.1.0
-* Integrated iOS Publisher SDK v6.7.0.0
-* Integrated Android Publisher SDK v6.7.0.0
-* Integrated Windows Publisher SDK v.6.7.0.0
-
-#### VERSION 6.5.3.0
-* Integrated iOS Publisher SDK v6.5.3
-* Integrated Android Publisher SDK v6.5.3
-* Integrated Windows Publisher SDK v6.5.2
-
-#### VERSION 6.5.2.1
-* Integrated iOS Publisher SDK v6.5.2
-* Integrated Android Publisher SDK v6.5.2
-* Integrated Windows Publisher SDK v6.5.2
-
-#### VERSION 6.5.2.0
-* Integrated iOS Publisher SDK v6.5.2
-* Integrated Android Publisher SDK v6.5.2
-* Integrated Windows Publisher SDK v6.5.1
-
-#### VERSION 6.5.1
-* Integrated iOS Publisher SDK v6.5.1
-* Integrated Android Publisher SDK v6.5.1
-* Integrated Windows Publisher SDK v6.5.1
-
-#### VERSION 6.4.4
-* Integrated iOS Publisher SDK v6.4.6
-* Integrated Android Publisher SDK v6.4.11
-* Integrated Windows Publisher SDK v6.4.1
-
-#### VERSION 6.4.4
-* Integrated iOS Publisher SDK v6.4.6
-* Integrated Android Publisher SDK v6.4.11
-* Integrated Windows Publisher SDK v6.4.1
-
-#### VERSION 6.4.3
-* Integrated iOS Publisher SDK v6.4.5
-* Integrated Android Publisher SDK v6.4.11
-* Integrated Windows Publisher SDK v6.4.1
-
-#### VERSION 6.4.2
-* Integrated iOS Publisher SDK v6.4.3
-* Integrated Android Publisher SDK v6.4.11
-* Integrated Windows Publisher SDK v6.4.1
-
-#### VERSION 6.3.0
-* Integrated iOS Publisher SDK v6.3.2
-* Integrated Android Publisher SDK v6.3.24
-* Integrated Windows Publisher SDK v6.3.0
-
-#### VERSION 6.2.0
-* Integrated iOS Publisher SDK v6.2.0
-* Integrated Android Publisher SDK v6.2.5
-
-#### VERSION 5.4.0
-* Integrated iOS Publisher SDK v5.4.0
-
-#### VERSION 3.1.35
-* Integrated Android Publisher SDK v4.1.0
+- **Windows** — follow [Windows/README.md](Windows/README.md) for the bridge architecture, build steps, and sample app.
+- **Android / iOS** — follow [AndroidIOS/README.md](AndroidIOS/README.md) to run the test app; for production integration see the [Liftoff Monetize Unity documentation](https://support.vungle.com/hc/en-us/articles/360003455452).
 
 ## License
-The Vungle Unity-Plugin is available under a commercial license. See the LICENSE file for more info.
+
+This plugin is available under a commercial license from LMI Inc., a Liftoff Mobile, Inc. company. See [LICENSE.md](LICENSE.md) for details.

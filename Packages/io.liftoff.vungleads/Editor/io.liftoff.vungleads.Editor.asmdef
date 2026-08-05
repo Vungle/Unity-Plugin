@@ -1,0 +1,10 @@
+{
+    "name": "io.liftoff.vungleads.Editor",
+    "references": [
+      "io.liftoff.vungleads.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}
